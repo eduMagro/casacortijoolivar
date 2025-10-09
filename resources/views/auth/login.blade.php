@@ -7,7 +7,6 @@
             -webkit-backdrop-filter: blur(10px);
         }
     </style>
-
     <!-- Contenedor centrado con glassmorphism -->
     <div class="flex items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8">
         <form method="POST" action="{{ route('login') }}"
