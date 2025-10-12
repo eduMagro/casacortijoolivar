@@ -24,6 +24,8 @@ Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.
 Route::get('/habitaciones/{habitacion}/eventos', [HabitacionController::class, 'eventosDisponibilidad'])
     ->name('habitaciones.eventos');
 Route::get('/habitaciones/{habitacion}/precio', [HabitacionController::class, 'calcularPrecio'])->name('habitaciones.precio');
+Route::post('/habitaciones/{habitacion}/imagenes', [HabitacionController::class, 'subirImagenes'])
+    ->name('habitaciones.imagenes');
 
 Route::get('/habitaciones/disponibles', [HabitacionController::class, 'disponibles'])->name('habitaciones.disponibles');
 
@@ -47,6 +49,9 @@ Route::resource('clientes', ClienteController::class);
 Route::resource('reservas', ReservaController::class);
 Route::get('/api/reservas', [ReservaController::class, 'apiReservas'])->name('api.reservas');
 Route::post('/pago/reserva', [ReservaController::class, 'procesarPago'])->name('pago.reserva');
+
+Route::match(['get', 'post'], '/mis-reservas', [ReservaController::class, 'buscar'])->name('reservas.buscar');
+Route::delete('/reservas/{reserva}/cancelar', [ReservaController::class, 'cancelarReserva'])->name('reservas.cancelar');
 
 /*
 |--------------------------------------------------------------------------

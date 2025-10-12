@@ -67,6 +67,33 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        function formatoFechaBonita(inicioStr, finStr) {
+            const meses = [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ];
+
+            const inicio = new Date(inicioStr);
+            const fin = new Date(finStr);
+
+            const diaInicio = inicio.getDate();
+            const diaFin = fin.getDate();
+            const mesInicio = meses[inicio.getMonth()];
+            const mesFin = meses[fin.getMonth()];
+            const añoInicio = inicio.getFullYear();
+            const añoFin = fin.getFullYear();
+
+            if (mesInicio === mesFin && añoInicio === añoFin) {
+                return `Del ${diaInicio} al ${diaFin} de ${mesInicio} de ${añoInicio}`;
+            }
+
+            if (añoInicio === añoFin) {
+                return `Del ${diaInicio} de ${mesInicio} al ${diaFin} de ${mesFin} de ${añoInicio}`;
+            }
+
+            return `Del ${diaInicio} de ${mesInicio} de ${añoInicio} al ${diaFin} de ${mesFin} de ${añoFin}`;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             @foreach ($habitaciones as $habitacion)
                 const elCalendario{{ $habitacion->id }} = document.getElementById(
@@ -105,14 +132,15 @@
                                             return;
                                         }
 
-                                        const total = esPorCama ? data.total * camas : data.total;
+                                        const total = data.total;
+
 
                                         Swal.fire({
                                             title: 'Confirmar reserva',
                                             html: `
                     <p><strong>Habitación:</strong> ${data.habitacion}</p>
-                    <p><strong>Desde:</strong> ${data.inicio}</p>
-                    <p><strong>Hasta:</strong> ${data.fin}</p>
+                  <p><strong>Fechas:</strong> ${formatoFechaBonita(data.inicio, data.fin)}</p>
+
                     ${esPorCama ? `<p><strong>Camas:</strong> ${camas}</p>` : ''}
                     <p><strong>Total:</strong> ${total.toFixed(2)} €</p>
                 `,
@@ -122,10 +150,17 @@
                                             cancelButtonText: 'Cancelar',
                                         }).then(result => {
                                             if (result.isConfirmed) {
-                                                Swal.fire('Reservado',
-                                                    'La reserva se ha registrado (ficticiamente).',
-                                                    'success');
+                                                const params = new URLSearchParams({
+                                                    habitacion_id: {{ $habitacion->id }},
+                                                    entrada: inicio,
+                                                    salida: fin,
+                                                    huespedes: camas
+                                                });
+
+                                                window.location.href =
+                                                    `{{ route('reservas.create') }}?${params.toString()}`;
                                             }
+
                                         });
                                     }).catch(err => {
                                         console.error('Error al llamar a precio:', err);
@@ -137,7 +172,7 @@
 
                             if (esPorCama) {
                                 Swal.fire({
-                                    title: '¿Cuántas camas?',
+                                    title: '¿Cuántas camas quieres reservar?',
                                     input: 'number',
                                     inputAttributes: {
                                         min: 1,
@@ -148,8 +183,9 @@
                                     showCancelButton: true,
                                     cancelButtonText: 'Cancelar',
                                     inputValidator: (value) => {
-                                        if (!value || value < 1) {
-                                            return 'Introduce una cantidad válida.';
+                                        if (!value || value < 1 || value >
+                                            {{ $habitacion->capacidad }}) {
+                                            return 'Introduce una cantidad válida de camas.';
                                         }
                                     }
                                 }).then(result => {
@@ -159,8 +195,33 @@
                                     }
                                 });
                             } else {
-                                calcularYConfirmar();
+                                Swal.fire({
+                                    title: 'Número de huéspedes',
+                                    html: `<p>Capacidad máxima: <strong>{{ $habitacion->capacidad }}</strong> personas</p>`,
+                                    input: 'number',
+                                    inputAttributes: {
+                                        min: 1,
+                                        max: {{ $habitacion->capacidad }},
+                                    },
+                                    inputValue: 1,
+                                    confirmButtonText: 'Continuar',
+                                    showCancelButton: true,
+                                    cancelButtonText: 'Cancelar',
+                                    inputValidator: (value) => {
+                                        if (!value || value < 1 || value >
+                                            {{ $habitacion->capacidad }}) {
+                                            return 'Introduce un número válido de huéspedes.';
+                                        }
+                                    }
+                                }).then(result => {
+                                    if (result.isConfirmed) {
+                                        camas = parseInt(result
+                                            .value); // usamos "camas" como contador genérico
+                                        calcularYConfirmar();
+                                    }
+                                });
                             }
+
                         },
 
                         events: urlEventos{{ $habitacion->id }}

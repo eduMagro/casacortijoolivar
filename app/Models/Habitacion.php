@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use App\Models\PrecioDia;
+use Illuminate\Support\Facades\Log;
 
 class Habitacion extends Model
 {
@@ -29,6 +31,10 @@ class Habitacion extends Model
         return $this->hasMany(Reserva::class);
     }
 
+    public function imagenes()
+    {
+        return $this->hasMany(HabitacionImagen::class);
+    }
 
     public function camasLibresEn($fechaEntrada, $fechaSalida)
     {
@@ -67,22 +73,131 @@ class Habitacion extends Model
     }
 
 
-    public function calcularPrecioTotal($entrada, $salida)
+
+    public function calcularPrecioTotal($entrada, $salida, $cantidad = 1)
     {
         $total = 0;
         $fechaActual = Carbon::parse($entrada);
-        $fechaFin = Carbon::parse($salida);
+        $fechaFin = Carbon::parse($salida)->startOfDay();
+
+        Log::debug("🧾 Cálculo de precio para habitación {$this->id} ({$this->nombre})", [
+            'modo_reserva' => $this->modo_reserva,
+            'capacidad' => $this->capacidad,
+            'entrada' => $entrada,
+            'salida' => $salida,
+            'cantidad' => $cantidad,
+        ]);
 
         while ($fechaActual->lt($fechaFin)) {
+            $fecha = $fechaActual->format('Y-m-d');
+
             $precioDia = PrecioDia::where('habitacion_id', $this->id)
-                ->where('fecha', $fechaActual->format('Y-m-d'))
+                ->whereDate('fecha', $fecha)
                 ->value('precio');
 
-            $total += $precioDia ?? $this->precio_noche;
+            $precioBase = $precioDia ?? $this->precio_noche;
+
+            // Calculamos según el modo
+            if ($this->modo_reserva === 'por_cama') {
+                $precioFinal = $precioBase * $cantidad;
+                $detalle = "{$precioBase} × {$cantidad} camas";
+            } else {
+                $precioFinal = $precioBase;
+                $detalle = "{$precioBase} habitación";
+            }
+
+            $total += $precioFinal;
+
+            Log::debug("🗓 Día {$fecha} → {$detalle} = {$precioFinal}");
 
             $fechaActual->addDay();
         }
 
-        return $total;
+        Log::debug("💰 Total calculado para habitación {$this->id}: {$total} €");
+
+        return round($total, 2);
+    }
+
+    public function verificarDisponibilidad(string $inicio, string $fin, int $cantidad = 1): array
+    {
+        $inicio = Carbon::parse($inicio);
+        $fin = Carbon::parse($fin);
+        $modo = $this->modo_reserva;
+        $detalles = [];
+        $disponible = true;
+
+        $periodo = CarbonPeriod::create($inicio, $fin->subDay()); // excluye el día de salida
+
+        foreach ($periodo as $dia) {
+            $fecha = $dia->format('Y-m-d');
+
+            if ($modo === 'completa') {
+                $ocupada = Reserva::where('habitacion_id', $this->id)
+                    ->where('estado', '!=', 'cancelada')
+                    ->whereDate('fecha_entrada', '<=', $dia)
+                    ->whereDate('fecha_salida', '>', $dia)
+                    ->exists();
+
+                if ($ocupada) {
+                    $disponible = false;
+                    $detalles[] = [
+                        'fecha' => $fecha,
+                        'error' => 'La habitación completa ya está reservada.'
+                    ];
+                }
+
+                continue;
+            }
+
+            if ($modo === 'por_cama') {
+                $ocupadas = Reserva::where('habitacion_id', $this->id)
+                    ->where('estado', '!=', 'cancelada')
+                    ->whereDate('fecha_entrada', '<=', $dia)
+                    ->whereDate('fecha_salida', '>', $dia)
+                    ->sum('personas');
+
+                $libres = $this->capacidad - $ocupadas;
+
+                if ($cantidad > $libres) {
+                    $disponible = false;
+                    $detalles[] = [
+                        'fecha' => $fecha,
+                        'error' => "Solo quedan $libres camas libres y has pedido $cantidad."
+                    ];
+                }
+            }
+        }
+
+        if (!$disponible) {
+            Log::warning("❌ Reserva rechazada por falta de disponibilidad", [
+                'habitacion_id' => $this->id,
+                'modo' => $modo,
+                'detalles' => $detalles
+            ]);
+        }
+
+        return [
+            'disponible' => $disponible,
+            'detalles' => $detalles
+        ];
+    }
+    public function disponibilidadPorFecha(string $fecha): string|int
+    {
+        // Trae todas las reservas que cruzan con esa fecha exacta
+        $reservasEseDia = $this->reservas()
+            ->where('fecha_entrada', '<=', $fecha)
+            ->where('fecha_salida', '>', $fecha)
+            ->get();
+
+        if ($this->modo_reserva === 'completa') {
+            return $reservasEseDia->isNotEmpty() ? 'reservada' : 'disponible';
+        }
+
+        if ($this->modo_reserva === 'por_cama') {
+            $camasOcupadas = $reservasEseDia->sum('personas');
+            return max(0, $this->capacidad - $camasOcupadas);
+        }
+
+        return 'desconocido';
     }
 }

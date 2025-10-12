@@ -9,6 +9,10 @@
             <p><strong>Fechas:</strong> {{ $entrada }} al {{ $salida }}</p>
             <p><strong>Total:</strong> {{ number_format($habitacion->precio_total, 2) }} €</p>
         </div>
+        <button type="button" id="btn-autocompletar"
+            class="mb-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            Autocompletar huéspedes
+        </button>
 
         <form action="{{ route('pago.reserva') }}" method="POST" id="form-pago" class="space-y-8">
             @csrf
@@ -80,13 +84,19 @@
                     <div>
                         <label for="nacionalidad_titular"
                             class="block text-sm font-medium text-gray-700">Nacionalidad</label>
-                        <input type="text" id="nacionalidad_titular" name="nacionalidad_titular"
-                            value="{{ old('nacionalidad_titular') }}"
-                            class="mt-1 block w-full border border-gray-300 rounded px-3 py-2">
-                        @error('nacionalidad_titular')
-                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-                        @enderror
+                        <select id="nacionalidad_titular" name="nacionalidad_titular"
+                            class="mt-1 block w-full border border-gray-300 rounded px-3 py-2 bg-white text-gray-900">
+                            <option value="">Selecciona una nacionalidad</option>
+                            @foreach ($nacionalidades as $nac)
+                                <option value="{{ $nac }}"
+                                    {{ old('nacionalidad_titular') == $nac ? 'selected' : '' }}>
+                                    {{ $nac }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
+
+
                     <div>
                         <label for="edad_titular" class="block text-sm font-medium text-gray-700">Edad</label>
                         <input type="number" id="edad_titular" name="edad_titular" min="0" max="120"
@@ -106,6 +116,12 @@
             {{-- Huéspedes --}}
             <section class="space-y-4">
                 <h3 class="text-lg font-semibold">Datos de los {{ $huespedes }} huésped(es)</h3>
+                <div class="mb-4">
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" id="copiar-titular-huesped" class="form-checkbox h-5 w-5 text-blue-600">
+                        <span class="ml-2 text-sm text-gray-700">El titular también es uno de los huéspedes</span>
+                    </label>
+                </div>
 
                 @for ($i = 1; $i <= $huespedes; $i++)
                     <div class="border p-4 rounded-md bg-gray-50 space-y-3">
@@ -141,10 +157,19 @@
                             </div>
                             <div>
                                 <label class="block text-sm text-gray-700">Nacionalidad</label>
-                                <input type="text" name="huespedes[{{ $i }}][nacionalidad]" required
-                                    value="{{ old("huespedes.$i.nacionalidad") }}"
-                                    class="mt-1 block w-full border border-gray-300 rounded px-3 py-2">
+                                <select name="huespedes[{{ $i }}][nacionalidad]"
+                                    class="mt-1 block w-full border border-gray-300 rounded px-3 py-2 bg-white text-gray-900"
+                                    required>
+                                    <option value="">Selecciona una nacionalidad</option>
+                                    @foreach ($nacionalidades as $nac)
+                                        <option value="{{ $nac }}"
+                                            {{ old("huespedes.$i.nacionalidad") == $nac ? 'selected' : '' }}>
+                                            {{ $nac }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
+
                             <div>
                                 <label class="block text-sm text-gray-700">Edad</label>
                                 <input type="number" name="huespedes[{{ $i }}][edad]" min="0"
@@ -222,4 +247,144 @@
             }
         });
     </script>
+    <script>
+        (function() {
+            const checkbox = document.getElementById('copiar-titular-huesped');
+            if (!checkbox) return;
+
+            // Mapeo: id del titular => name del primer huésped
+            const map = {
+                'nombre_titular': 'huespedes[1][nombre]',
+                'apellido1_titular': 'huespedes[1][apellido1]',
+                'apellido2_titular': 'huespedes[1][apellido2]',
+                'dni_titular': 'huespedes[1][dni]',
+                'nacionalidad_titular': 'huespedes[1][nacionalidad]',
+                'edad_titular': 'huespedes[1][edad]'
+            };
+
+            // Guarda listeners para poder removerlos si se desmarca
+            const titularListeners = [];
+
+            function copiarDatos() {
+                for (const titularId in map) {
+                    const titular = document.getElementById(titularId);
+                    const huesped = document.querySelector(`[name="${map[titularId]}"]`);
+                    if (!titular || !huesped) continue;
+
+                    // Para selects y inputs tratamos igual: asignar value
+                    huesped.value = titular.value ?? '';
+
+                    // Si es select y no existe el value en opciones, fallback a ''
+                    if (huesped.tagName === 'SELECT') {
+                        const hasOption = Array.from(huesped.options).some(opt => opt.value === titular.value);
+                        if (!hasOption) huesped.selectedIndex = 0;
+                    }
+                }
+            }
+
+            function limpiarDatos() {
+                for (const titularId in map) {
+                    const huesped = document.querySelector(`[name="${map[titularId]}"]`);
+                    if (!huesped) continue;
+
+                    if (huesped.tagName === 'SELECT') {
+                        huesped.selectedIndex = 0;
+                    } else {
+                        huesped.value = '';
+                    }
+                }
+            }
+
+            function attachTitularSync() {
+                // Añadimos listeners 'input' para mantener en sincronía mientras esté marcado
+                for (const titularId in map) {
+                    const titular = document.getElementById(titularId);
+                    if (!titular) continue;
+
+                    const handler = () => {
+                        // Solo copiar si sigue marcado
+                        if (checkbox.checked) {
+                            const huesped = document.querySelector(`[name="${map[titularId]}"]`);
+                            if (!huesped) return;
+                            huesped.value = titular.value ?? '';
+                            if (huesped.tagName === 'SELECT') {
+                                const hasOption = Array.from(huesped.options).some(opt => opt.value === titular
+                                    .value);
+                                if (!hasOption) huesped.selectedIndex = 0;
+                            }
+                        }
+                    };
+
+                    titular.addEventListener('input', handler);
+                    titularListeners.push({
+                        el: titular,
+                        handler
+                    });
+                }
+            }
+
+            function detachTitularSync() {
+                titularListeners.forEach(({
+                    el,
+                    handler
+                }) => el.removeEventListener('input', handler));
+                titularListeners.length = 0;
+            }
+
+            // Handler principal del checkbox
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    copiarDatos();
+                    attachTitularSync();
+                } else {
+                    limpiarDatos();
+                    detachTitularSync();
+                }
+            });
+
+            // Si al cargar ya está marcado (tests), forzamos copia y sync
+            if (checkbox.checked) {
+                copiarDatos();
+                attachTitularSync();
+            }
+        })();
+    </script>
+
+    <script>
+        document.getElementById('btn-autocompletar').addEventListener('click', () => {
+            const nombres = ['Ana', 'Luis', 'Carlos', 'Marta', 'Juan', 'Laura', 'David', 'Lucía'];
+            const apellidos = ['Gómez', 'Fernández', 'López', 'Pérez', 'Martínez', 'Rodríguez'];
+            const nacionalidades = ['Española', 'Italiana', 'Francesa', 'Alemana', 'Argentina', 'Colombiana'];
+
+            const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+            // Encuentra todos los grupos de inputs de huéspedes
+            document.querySelectorAll('[name^="huespedes["]').forEach((input) => {
+                const name = input.getAttribute('name');
+
+                if (name.includes('[nombre]')) {
+                    input.value = getRandom(nombres);
+                } else if (name.includes('[apellido1]')) {
+                    input.value = getRandom(apellidos);
+                } else if (name.includes('[apellido2]')) {
+                    input.value = getRandom(apellidos);
+                } else if (name.includes('[dni]')) {
+                    input.value = 'X' + Math.floor(Math.random() * 90000000 + 10000000);
+                } else if (name.includes('[nacionalidad]')) {
+                    input.value = getRandom(nacionalidades);
+                } else if (name.includes('[edad]')) {
+                    input.value = Math.floor(Math.random() * 50 + 18);
+                }
+            });
+            document.getElementById('nombre_titular').value = getRandom(nombres);
+            document.getElementById('apellido1_titular').value = getRandom(apellidos);
+            document.getElementById('apellido2_titular').value = getRandom(apellidos);
+            document.getElementById('dni_titular').value = 'Y' + Math.floor(Math.random() * 90000000 + 10000000);
+            document.getElementById('nacionalidad_titular').value = getRandom(nacionalidades);
+            document.getElementById('edad_titular').value = Math.floor(Math.random() * 50 + 25);
+            document.getElementById('email').value = `${getRandom(nombres).toLowerCase()}@prueba.com`;
+
+        });
+    </script>
+
 </x-app-layout>

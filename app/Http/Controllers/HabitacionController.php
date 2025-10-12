@@ -295,7 +295,7 @@ class HabitacionController extends Controller
                 'nombre'        => 'required|string|max:100|unique:habitaciones',
                 'tipo'          => 'required|in:masculina,femenina,mixta',
                 'capacidad'     => 'required|integer|min:1|max:20',
-                'modo_reserva'  => 'required|in:completa,por_cama', // ✅ NUEVO
+                'modo_reserva'  => 'required|in:completa,por_cama',
                 'precio_noche'  => 'nullable|numeric|min:0',
                 'imagenes.*'    => 'image|max:10240',
             ], [
@@ -307,12 +307,12 @@ class HabitacionController extends Controller
                 'capacidad.integer'       => 'La capacidad debe ser un número entero.',
                 'capacidad.min'           => 'Debe haber al menos 1 huésped.',
                 'capacidad.max'           => 'No se permiten más de 20 huéspedes.',
-                'modo_reserva.required'   => 'Debes seleccionar un modo de reserva.', // ✅ NUEVO
-                'modo_reserva.in'         => 'El modo de reserva no es válido.',       // ✅ NUEVO
+                'modo_reserva.required'   => 'Debes seleccionar un modo de reserva.',
+                'modo_reserva.in'         => 'El modo de reserva no es válido.',
                 'precio_noche.numeric'    => 'El precio debe ser un número.',
                 'precio_noche.min'        => 'El precio no puede ser negativo.',
                 'imagenes.*.image'        => 'Cada archivo debe ser una imagen válida.',
-                'imagenes.*.max'          => 'Cada imagen no puede superar los 10 MB.',
+                'imagenes.*.max'          => 'Cada imagen no puede superar los 10 MB.',
             ]);
         } catch (ValidationException $e) {
             return back()
@@ -324,26 +324,28 @@ class HabitacionController extends Controller
         try {
             DB::beginTransaction();
 
+            // ✅ Crear la habitación
             $habitacion = Habitacion::create($validated);
 
+            // ✅ Guardar múltiples imágenes en la nueva tabla
             if ($request->hasFile('imagenes')) {
-                foreach ($request->file('imagenes') as $imagen) {
+                foreach ($request->file('imagenes') as $index => $imagen) {
                     $nombreArchivo = uniqid() . '.' . $imagen->getClientOriginalExtension();
                     $ruta = 'habitaciones/' . $nombreArchivo;
 
                     Storage::disk('public')->putFileAs('habitaciones', $imagen, $nombreArchivo);
 
-                    if (!$habitacion->imagen) {
-                        $habitacion->imagen = $ruta;
-                        $habitacion->save();
-                        break;
-                    }
+                    $habitacion->imagenes()->create([
+                        'ruta_imagen' => $ruta,
+                        'orden' => $index,
+                    ]);
                 }
             }
 
             DB::commit();
 
-            return redirect()->route('habitaciones.index')->with('success', 'Habitación creada correctamente.');
+            return redirect()->route('habitaciones.index')
+                ->with('success', 'Habitación creada correctamente.');
         } catch (\Throwable $e) {
             DB::rollBack();
 
@@ -353,6 +355,19 @@ class HabitacionController extends Controller
         }
     }
 
+    public function subirImagenes(Request $request, Habitacion $habitacion)
+    {
+        $request->validate([
+            'imagenes.*' => 'image|max:4096',
+        ]);
+
+        foreach ($request->file('imagenes', []) as $imagen) {
+            $ruta = $imagen->store('habitaciones', 'public');
+            $habitacion->imagenes()->create(['ruta_imagen' => $ruta]);
+        }
+
+        return back()->with('success', 'Imágenes añadidas correctamente.');
+    }
 
 
     /**
