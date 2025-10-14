@@ -147,14 +147,17 @@
                 <a class="underline text-sm text-white hover:text-gray-200 transition" href="{{ route('login') }}">
                     ¿Ya estás registrado?
                 </a>
-                <button type="submit"
-                    class="inline-flex items-center justify-center
-                           px-6 py-2.5 rounded-lg
-                           bg-white hover:bg-gray-200
-                           text-black font-semibold
-                           shadow-md transition">
-                    Registrarse
-                </button>
+                @auth
+                    <button type="submit"
+                        class="inline-flex items-center justify-center
+               px-6 py-2.5 rounded-lg
+               bg-white hover:bg-gray-200
+               text-black font-semibold
+               shadow-md transition">
+                        Registrarse
+                    </button>
+                @endauth
+
             </div>
         </form>
     </div>

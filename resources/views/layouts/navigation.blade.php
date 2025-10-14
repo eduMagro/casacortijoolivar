@@ -79,9 +79,12 @@
                         <x-nav-link :href="route('login')" :active="request()->routeIs('login')">
                             Iniciar sesión
                         </x-nav-link>
-                        <x-nav-link :href="route('register')" :active="request()->routeIs('register')">
-                            Registrarse
-                        </x-nav-link>
+                        @auth
+                            <x-nav-link :href="route('register')" :active="request()->routeIs('register')">
+                                Registrarse
+                            </x-nav-link>
+                        @endauth
+
                     </div>
                 @endauth
             </div>
@@ -161,9 +164,12 @@
                     <x-responsive-nav-link :href="route('login')" :active="request()->routeIs('login')">
                         Iniciar sesión
                     </x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('register')" :active="request()->routeIs('register')">
-                        Registrarse
-                    </x-responsive-nav-link>
+                    @auth
+                        <x-responsive-nav-link :href="route('register')" :active="request()->routeIs('register')">
+                            Registrarse
+                        </x-responsive-nav-link>
+                    @endauth
+
                 </div>
             @endauth
         </div>
