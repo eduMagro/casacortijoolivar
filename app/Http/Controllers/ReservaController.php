@@ -372,12 +372,20 @@ class ReservaController extends Controller
             // 4️⃣ Capturar pago y correo
             if ($debeCobrarYa) {
                 $paymentIntent->capture();
-                Mail::to($cliente->email)->send(new \App\Mail\ConfirmacionPagoMail($reserva));
+
+                Mail::to($cliente->email)
+                    ->bcc('reservas@casacortijoolivar.com')
+                    ->send(new \App\Mail\ConfirmacionPagoMail($reserva));
+
                 $mensaje = 'Reserva confirmada y pago realizado con éxito.';
             } else {
-                Mail::to($cliente->email)->send(new \App\Mail\ConfirmacionReservaMail($reserva));
+                Mail::to($cliente->email)
+                    ->bcc('reservas@casacortijoolivar.com')
+                    ->send(new \App\Mail\ConfirmacionReservaMail($reserva));
+
                 $mensaje = 'Reserva completada correctamente. Pago programado 7 días antes del check-in.';
             }
+
 
             // 5️⃣ Guardar huéspedes adicionales
             foreach ($request->huespedes as $huesped) {

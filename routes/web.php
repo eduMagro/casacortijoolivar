@@ -54,6 +54,8 @@ Route::get('/instalaciones', [HabitacionController::class, 'instalaciones'])
 
 Route::get('/entorno', [HabitacionController::class, 'entorno'])
     ->name('entorno.index');
+Route::get('/contacto', [HabitacionController::class, 'contacto'])->name('contacto.index');
+Route::post('/contacto', [HabitacionController::class, 'enviarContacto'])->name('contacto.enviar');
 
 // Clientes
 Route::resource('clientes', ClienteController::class);

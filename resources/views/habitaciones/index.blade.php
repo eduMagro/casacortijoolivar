@@ -135,6 +135,7 @@
                                 <template x-for="img in imagenesHabitacion" :key="img.id">
                                     <div class="relative">
                                         <img :src="'{{ asset('storage') }}/' + img.ruta_imagen" class="rounded shadow">
+
                                         <form :action="'{{ url('habitacion-imagenes') }}/' + img.id" method="POST"
                                             class="absolute top-1 right-1 delete-form">
                                             @csrf
@@ -184,6 +185,7 @@
                                 <template x-if="tieneImagenes">
                                     <img :src="'{{ asset('storage') }}/' + imgs[idx]"
                                         class="absolute inset-0 h-48 w-full object-cover rounded transition-all duration-500">
+
                                 </template>
 
                                 <button @click="anterior()" x-show="imgs.length > 1"

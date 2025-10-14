@@ -13,6 +13,7 @@ use Illuminate\Validation\ValidationException;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
 
 class HabitacionController extends Controller
 {
@@ -332,9 +333,10 @@ class HabitacionController extends Controller
             if ($request->hasFile('imagenes')) {
                 foreach ($request->file('imagenes') as $index => $imagen) {
                     $nombreArchivo = uniqid() . '.' . $imagen->getClientOriginalExtension();
-                    $ruta = 'habitaciones/' . $nombreArchivo;
+                    $ruta = 'img_habitaciones/' . $nombreArchivo;
 
-                    Storage::disk('public')->putFileAs('habitaciones', $imagen, $nombreArchivo);
+                    Storage::disk('public')->putFileAs('img_habitaciones', $imagen, $nombreArchivo);
+
 
                     $habitacion->imagenes()->create([
                         'ruta_imagen' => $ruta,
@@ -363,7 +365,7 @@ class HabitacionController extends Controller
         ]);
 
         foreach ($request->file('imagenes', []) as $imagen) {
-            $ruta = $imagen->store('habitaciones', 'public');
+            $ruta = $imagen->store('img_habitaciones', 'public');
             $habitacion->imagenes()->create(['ruta_imagen' => $ruta]);
         }
 
@@ -448,5 +450,29 @@ class HabitacionController extends Controller
         $habitaciones = Habitacion::all();
 
         return view('entorno.index', compact('habitaciones'));
+    }
+
+    public function contacto()
+    {
+        return view('contacto.index');
+    }
+
+    public function enviarContacto(Request $request)
+    {
+        $request->validate([
+            'nombre' => 'required|string|max:100',
+            'email' => 'required|email',
+            'mensaje' => 'required|string|max:1000',
+        ]);
+
+        Mail::raw(
+            "Mensaje de: {$request->nombre}\nEmail: {$request->email}\n\n{$request->mensaje}",
+            function ($m) use ($request) {
+                $m->to('info@casacortijoolivar.es', 'Casa Cortijo Olivar')
+                    ->subject('Nuevo mensaje de contacto');
+            }
+        );
+
+        return back()->with('success', 'Gracias por tu mensaje. Te responderemos pronto.');
     }
 }

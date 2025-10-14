@@ -21,12 +21,10 @@
                         Habitaciones
                     </x-nav-link>
 
-                    {{-- Nueva sección: Instalaciones --}}
                     <x-nav-link :href="route('instalaciones.index')" :active="request()->routeIs('instalaciones.index')">
                         Instalaciones
                     </x-nav-link>
 
-                    {{-- Nueva sección: Entorno --}}
                     <x-nav-link :href="route('entorno.index')" :active="request()->routeIs('entorno.index')">
                         Entorno
                     </x-nav-link>
@@ -35,12 +33,17 @@
                         Mis reservas
                     </x-nav-link>
 
+                    <x-nav-link :href="route('contacto.index')" :active="request()->routeIs('contacto.index')">
+                        Contacto
+                    </x-nav-link>
+
                     @auth
                         <x-nav-link :href="route('reservas.index')" :active="request()->routeIs('reservas.index')">
                             Reservas
                         </x-nav-link>
                     @endauth
                 </div>
+
 
             </div>
 
@@ -125,6 +128,9 @@
 
             <x-responsive-nav-link :href="route('reservas.buscar')" :active="request()->routeIs('reservas.buscar')">
                 Mis reservas
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('contacto.index')" :active="request()->routeIs('contacto.index')">
+                Contacto
             </x-responsive-nav-link>
 
             @auth
