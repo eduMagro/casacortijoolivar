@@ -26,19 +26,6 @@
                 </div>
 
                 <div class="space-y-6 text-gray-700">
-                    <div class="flex items-center space-x-4">
-                        <div class="p-3 bg-green-100 rounded-xl">
-                            <svg class="w-6 h-6 text-green-700" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M3 5h2l.4 2M7 13h10l4-8H5.4M7 13l-1.293 1.293a1 1 0 00.707 1.707H17a1 1 0 00.707-1.707L17 13M7 13V6h10v7M12 19a2 2 0 100-4 2 2 0 000 4z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="font-semibold">Teléfono</p>
-                            <p class="text-gray-600">+34 678 123 456</p>
-                        </div>
-                    </div>
 
                     <div class="flex items-center space-x-4">
                         <div class="p-3 bg-green-100 rounded-xl">
@@ -50,7 +37,7 @@
                         </div>
                         <div>
                             <p class="font-semibold">Correo</p>
-                            <p class="text-gray-600">info@casacortijoolivar.es</p>
+                            <p class="text-gray-600">reservas@casacortijoolivar.com</p>
                         </div>
                     </div>
 
@@ -66,7 +53,7 @@
                         </div>
                         <div>
                             <p class="font-semibold">Dirección</p>
-                            <p class="text-gray-600">Carretera del Olivar s/n, 41640 Osuna, Sevilla</p>
+                            <p class="text-gray-600">Urbanización Casquero c/Z nº97, 41703 Dos Hermanas, Sevilla</p>
                         </div>
                     </div>
 
@@ -80,7 +67,7 @@
                         </div>
                         <div>
                             <p class="font-semibold">Horario</p>
-                            <p class="text-gray-600">Lunes a domingo: 9:00 - 20:00</p>
+                            <p class="text-gray-600">Lunes a domingo: 14:00 - 22:00</p>
                         </div>
                     </div>
                 </div>
@@ -136,13 +123,6 @@
                     </div>
                 </form>
             </div>
-        </div>
-
-        <!-- Mapa -->
-        <div class="mt-20">
-            <iframe class="w-full h-96 border-0 rounded-t-2xl shadow-inner"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3193.3498357096744!2d-5.968692784712136!3d37.23539827986573!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd1279abf0e6a3b9%3A0x25a03f7d301a30a8!2sOsuna%2C%20Sevilla!5e0!3m2!1ses!2ses!4v1698353948652!5m2!1ses!2ses"
-                allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
     </section>
 </x-app-layout>
