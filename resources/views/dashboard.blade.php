@@ -30,7 +30,7 @@
 
                 {{-- Botón centrado --}}
                 <div class="flex justify-center">
-                    <a href="{{ route('habitaciones.disponibles') }}"
+                    <a href="{{ route('habitaciones.index') }}"
                         class="inline-flex items-center justify-center
                   px-8 py-3 rounded-lg
                   bg-white hover:bg-gray-200

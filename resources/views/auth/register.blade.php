@@ -3,11 +3,8 @@
     <style>
         .contenedor-transparente {
             background-color: rgba(255, 255, 255, 0.15);
-            /* Transparencia visible */
             backdrop-filter: blur(8px);
-            /* Difuminado elegante */
             -webkit-backdrop-filter: blur(8px);
-            /* Compatibilidad Safari */
         }
     </style>
 
@@ -28,7 +25,7 @@
                 <input id="nombre" name="nombre" required placeholder="Nombre"
                     class="mt-1 px-4 py-2 rounded-lg
                            bg-white/10 backdrop-blur-3xl
-                           text-white placeholder-white/70
+                           text-black placeholder-black/70
                            border border-white/30
                            focus:outline-none focus:ring-2 focus:ring-white" />
                 <x-input-error :messages="$errors->get('nombre')" class="mt-2 text-red-300" />
@@ -41,7 +38,7 @@
                     <input id="apellido1" name="apellido1" required placeholder="Apellido 1"
                         class="mt-1 px-4 py-2 rounded-lg
                                bg-white/10 backdrop-blur-3xl
-                               text-white placeholder-white/70
+                               text-black placeholder-black/70
                                border border-white/30
                                focus:outline-none focus:ring-2 focus:ring-white" />
                     <x-input-error :messages="$errors->get('apellido1')" class="mt-2 text-red-300" />
@@ -51,7 +48,7 @@
                     <input id="apellido2" name="apellido2" placeholder="Apellido 2"
                         class="mt-1 px-4 py-2 rounded-lg
                                bg-white/10 backdrop-blur-3xl
-                               text-white placeholder-white/70
+                               text-black placeholder-black/70
                                border border-white/30
                                focus:outline-none focus:ring-2 focus:ring-white" />
                     <x-input-error :messages="$errors->get('apellido2')" class="mt-2 text-red-300" />
@@ -64,7 +61,7 @@
                 <input id="email" name="email" type="email" required placeholder="correo@ejemplo.com"
                     class="mt-1 px-4 py-2 rounded-lg
                            bg-white/10 backdrop-blur-3xl
-                           text-white placeholder-white/70
+                           text-black placeholder-black/70
                            border border-white/30
                            focus:outline-none focus:ring-2 focus:ring-white" />
                 <x-input-error :messages="$errors->get('email')" class="mt-2 text-red-300" />
@@ -77,7 +74,7 @@
                     <input id="telefono" name="telefono" placeholder="+34 600 000 000"
                         class="mt-1 px-4 py-2 rounded-lg
                                bg-white/10 backdrop-blur-3xl
-                               text-white placeholder-white/70
+                               text-black placeholder-black/70
                                border border-white/30
                                focus:outline-none focus:ring-2 focus:ring-white" />
                     <x-input-error :messages="$errors->get('telefono')" class="mt-2 text-red-300" />
@@ -87,7 +84,7 @@
                     <input id="dni" name="dni" placeholder="12345678X"
                         class="mt-1 px-4 py-2 rounded-lg
                                bg-white/10 backdrop-blur-3xl
-                               text-white placeholder-white/70
+                               text-black placeholder-black/70
                                border border-white/30
                                focus:outline-none focus:ring-2 focus:ring-white" />
                     <x-input-error :messages="$errors->get('dni')" class="mt-2 text-red-300" />
@@ -100,7 +97,7 @@
                 <input id="direccion" name="direccion" placeholder="Calle, número, piso..."
                     class="mt-1 px-4 py-2 rounded-lg
                            bg-white/10 backdrop-blur-3xl
-                           text-white placeholder-white/70
+                           text-black placeholder-black/70
                            border border-white/30
                            focus:outline-none focus:ring-2 focus:ring-white" />
                 <x-input-error :messages="$errors->get('direccion')" class="mt-2 text-red-300" />
@@ -113,7 +110,7 @@
                     <input id="localidad" name="localidad" placeholder="Sevilla"
                         class="mt-1 px-4 py-2 rounded-lg
                                bg-white/10 backdrop-blur-3xl
-                               text-white placeholder-white/70
+                               text-black placeholder-black/70
                                border border-white/30
                                focus:outline-none focus:ring-2 focus:ring-white" />
                     <x-input-error :messages="$errors->get('localidad')" class="mt-2 text-red-300" />
@@ -123,7 +120,7 @@
                     <input id="pais" name="pais" placeholder="España"
                         class="mt-1 px-4 py-2 rounded-lg
                                bg-white/10 backdrop-blur-3xl
-                               text-white placeholder-white/70
+                               text-black placeholder-black/70
                                border border-white/30
                                focus:outline-none focus:ring-2 focus:ring-white" />
                     <x-input-error :messages="$errors->get('pais')" class="mt-2 text-red-300" />
@@ -136,7 +133,7 @@
                 <textarea id="notas" name="notas" rows="3" placeholder="Información adicional..."
                     class="mt-1 px-4 py-2 rounded-lg
                            bg-white/10 backdrop-blur-3xl
-                           text-white placeholder-white/70
+                           text-black placeholder-black/70
                            border border-white/30
                            focus:outline-none focus:ring-2 focus:ring-white"></textarea>
                 <x-input-error :messages="$errors->get('notas')" class="mt-2 text-red-300" />
