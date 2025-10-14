@@ -21,9 +21,10 @@ class HabitacionController extends Controller
      */
     public function index()
     {
-        $habitaciones = Habitacion::all();
+        $habitaciones = Habitacion::with('imagenes')->get();
         return view('habitaciones.index', compact('habitaciones'));
     }
+
 
     public function disponibles()
     {
@@ -368,6 +369,25 @@ class HabitacionController extends Controller
 
         return back()->with('success', 'Imágenes añadidas correctamente.');
     }
+    public function eliminarImagen($id)
+    {
+        try {
+            // Busca la imagen en la tabla habitaciones_imagenes
+            $imagen = \App\Models\HabitacionImagen::findOrFail($id);
+
+            // Borra el archivo físico si existe
+            if (Storage::disk('public')->exists($imagen->ruta_imagen)) {
+                Storage::disk('public')->delete($imagen->ruta_imagen);
+            }
+
+            // Borra el registro de la base de datos
+            $imagen->delete();
+
+            return back()->with('success', 'Imagen eliminada correctamente.');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Error al eliminar la imagen: ' . $e->getMessage());
+        }
+    }
 
 
     /**
@@ -412,5 +432,21 @@ class HabitacionController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error al eliminar la habitación: ' . $e->getMessage());
         }
+    }
+
+    public function instalaciones()
+    {
+        // Si quieres pasar datos (ejemplo: habitaciones con piscina o spa)
+        $habitaciones = Habitacion::where('tipo', '!=', 'mixta')->get();
+
+        return view('instalaciones.index', compact('habitaciones'));
+    }
+
+    public function entorno()
+    {
+        // Puedes pasar datos de contexto (ejemplo: actividades cercanas)
+        $habitaciones = Habitacion::all();
+
+        return view('entorno.index', compact('habitaciones'));
     }
 }

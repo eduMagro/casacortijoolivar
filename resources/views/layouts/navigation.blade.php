@@ -10,6 +10,7 @@
                     <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
                 </a>
 
+
                 <!-- Navigation Links -->
                 <div class="hidden sm:flex sm:space-x-8">
                     <x-nav-link :href="url('/')" :active="request()->is('/')">
@@ -18,6 +19,16 @@
 
                     <x-nav-link :href="route('habitaciones.index')" :active="request()->routeIs('habitaciones.index')">
                         Habitaciones
+                    </x-nav-link>
+
+                    {{-- Nueva sección: Instalaciones --}}
+                    <x-nav-link :href="route('instalaciones.index')" :active="request()->routeIs('instalaciones.index')">
+                        Instalaciones
+                    </x-nav-link>
+
+                    {{-- Nueva sección: Entorno --}}
+                    <x-nav-link :href="route('entorno.index')" :active="request()->routeIs('entorno.index')">
+                        Entorno
                     </x-nav-link>
 
                     <x-nav-link :href="route('reservas.buscar')" :active="request()->routeIs('reservas.buscar')">
@@ -30,6 +41,7 @@
                         </x-nav-link>
                     @endauth
                 </div>
+
             </div>
 
             <!-- Right Section -->
@@ -100,9 +112,20 @@
             <x-responsive-nav-link :href="route('habitaciones.index')" :active="request()->routeIs('habitaciones.index')">
                 Habitaciones
             </x-responsive-nav-link>
-            <x-nav-link :href="route('reservas.buscar')" :active="request()->routeIs('reservas.buscar')">
+
+            {{-- Nueva sección: Instalaciones --}}
+            <x-responsive-nav-link :href="route('instalaciones.index')" :active="request()->routeIs('instalaciones.index')">
+                Instalaciones
+            </x-responsive-nav-link>
+
+            {{-- Nueva sección: Entorno --}}
+            <x-responsive-nav-link :href="route('entorno.index')" :active="request()->routeIs('entorno.index')">
+                Entorno
+            </x-responsive-nav-link>
+
+            <x-responsive-nav-link :href="route('reservas.buscar')" :active="request()->routeIs('reservas.buscar')">
                 Mis reservas
-            </x-nav-link>
+            </x-responsive-nav-link>
 
             @auth
                 <x-responsive-nav-link :href="route('reservas.index')" :active="request()->routeIs('reservas.index')">
@@ -110,6 +133,7 @@
                 </x-responsive-nav-link>
             @endauth
         </div>
+
 
         <!-- Responsive Auth Settings -->
         <div class="pt-4 pb-1 border-t border-gray-200">

@@ -23,24 +23,37 @@ Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.
 // Habitaciones
 Route::get('/habitaciones/{habitacion}/eventos', [HabitacionController::class, 'eventosDisponibilidad'])
     ->name('habitaciones.eventos');
-Route::get('/habitaciones/{habitacion}/precio', [HabitacionController::class, 'calcularPrecio'])->name('habitaciones.precio');
-Route::post('/habitaciones/{habitacion}/imagenes', [HabitacionController::class, 'subirImagenes'])
-    ->name('habitaciones.imagenes');
+Route::get('/habitaciones/{habitacion}/precio', [HabitacionController::class, 'calcularPrecio'])
+    ->name('habitaciones.precio');
 
-Route::get('/habitaciones/disponibles', [HabitacionController::class, 'disponibles'])->name('habitaciones.disponibles');
+Route::get('/habitaciones/disponibles', [HabitacionController::class, 'disponibles'])
+    ->name('habitaciones.disponibles');
 
 Route::get('/habitaciones/calendario-precios', [HabitacionController::class, 'vistaCalendarioPrecios'])
-    ->name('habitaciones.calendarioPrecios');   // ← HTML (la vista)
+    ->name('habitaciones.calendarioPrecios');
 
 Route::get('/api/precios', [HabitacionController::class, 'precios'])
-    ->name('api.precios');                      // ← JSON (datos)
-
+    ->name('api.precios');
 Route::post('/api/precios/update', [HabitacionController::class, 'updatePrecio'])
     ->name('api.precios.update');
-
 Route::post('/api/precios/bulk-update', [HabitacionController::class, 'bulkUpdate'])
     ->name('api.precios.bulkUpdate');
+
+
+// 👇 ESTE SIEMPRE AL FINAL
 Route::resource('habitaciones', HabitacionController::class);
+
+// 👇 Y ESTE DESPUÉS DEL RESOURCE
+Route::post('/habitaciones/{habitacion}/imagenes', [HabitacionController::class, 'subirImagenes'])
+    ->name('habitaciones.imagenes');
+Route::delete('/habitacion-imagenes/{id}', [HabitacionController::class, 'eliminarImagen'])
+    ->name('habitaciones.imagenes.eliminar');
+// Páginas adicionales
+Route::get('/instalaciones', [HabitacionController::class, 'instalaciones'])
+    ->name('instalaciones.index');
+
+Route::get('/entorno', [HabitacionController::class, 'entorno'])
+    ->name('entorno.index');
 
 // Clientes
 Route::resource('clientes', ClienteController::class);

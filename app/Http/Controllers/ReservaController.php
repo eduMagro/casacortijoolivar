@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
-
+use Illuminate\Validation\ValidationException;
 // Modelos
 use App\Models\Habitacion;
 use App\Models\Reserva;
@@ -224,36 +224,96 @@ class ReservaController extends Controller
 
     public function procesarPago(Request $request)
     {
-        $request->validate([
-            'habitacion_id'   => 'required|exists:habitaciones,id',
-            'entrada'         => 'required|date',
-            'salida'          => 'required|date|after:entrada',
-            'total_huespedes' => 'required|numeric|min:1',
-            'precio'          => 'required|numeric|min:0',
-            'stripeToken'     => 'required|string',
+        try {
+            $mensajes = [
+                // Campos principales
+                'habitacion_id.required' => 'Selecciona una habitación antes de continuar.',
+                'habitacion_id.exists'   => 'La habitación seleccionada no existe.',
+                'entrada.required'       => 'Indica la fecha de entrada.',
+                'entrada.date'           => 'La fecha de entrada no es válida.',
+                'salida.required'        => 'Indica la fecha de salida.',
+                'salida.date'            => 'La fecha de salida no es válida.',
+                'salida.after'           => 'La fecha de salida debe ser posterior a la de entrada.',
+                'total_huespedes.required' => 'Debes indicar cuántas personas se alojarán.',
+                'total_huespedes.numeric'  => 'El número de huéspedes debe ser un valor numérico.',
+                'total_huespedes.min'      => 'Debe haber al menos un huésped.',
+                'precio.required'        => 'No se pudo calcular el precio de la reserva.',
+                'precio.numeric'         => 'El precio debe ser numérico.',
+                'precio.min'             => 'El precio no puede ser negativo.',
+                'stripeToken.required'   => 'No se ha podido procesar el pago. Intenta de nuevo.',
+                'stripeToken.string'     => 'Error interno en el token de pago.',
 
-            'nombre_titular'      => 'required|string|max:100',
-            'apellido1_titular'   => 'nullable|string|max:100',
-            'apellido2_titular'   => 'nullable|string|max:100',
-            'dni_titular'         => 'nullable|string|max:20',
-            'nacionalidad_titular' => 'nullable|string|max:100',
-            'edad_titular'        => 'nullable|integer|min:0|max:120',
-            'email'               => 'nullable|email|max:150',
+                // Titular
+                'nombre_titular.required' => 'El nombre del titular es obligatorio.',
+                'nombre_titular.max'      => 'El nombre del titular es demasiado largo.',
+                'apellido1_titular.max'   => 'El primer apellido del titular es demasiado largo.',
+                'apellido2_titular.max'   => 'El segundo apellido del titular es demasiado largo.',
+                'dni_titular.max'         => 'El DNI/NIE del titular supera el límite permitido.',
+                'nacionalidad_titular.max' => 'La nacionalidad del titular es demasiado larga.',
+                'edad_titular.integer'    => 'La edad debe ser un número entero.',
+                'edad_titular.max'        => 'Introduce una edad realista (máximo 120).',
+                'email.email'             => 'El correo electrónico no tiene un formato válido.',
+                'email.max'               => 'El correo electrónico es demasiado largo.',
 
-            'huespedes.*.nombre'        => 'required|string|max:100',
-            'huespedes.*.apellido1'     => 'required|string|max:100',
-            'huespedes.*.apellido2'     => 'required|string|max:100',
-            'huespedes.*.dni'           => 'required|string|max:20',
-            'huespedes.*.nacionalidad'  => 'required|string|max:100',
-            'huespedes.*.edad'          => 'required|integer|min:0|max:120',
-        ]);
+                // Huéspedes
+                'huespedes.*.nombre.required'       => 'Cada huésped debe tener un nombre.',
+                'huespedes.*.apellido1.required'    => 'Falta el primer apellido de algún huésped.',
+                'huespedes.*.apellido2.required'    => 'Falta el segundo apellido de algún huésped.',
+                'huespedes.*.dni.required'          => 'Falta el DNI/NIE de algún huésped.',
+                'huespedes.*.nacionalidad.required' => 'Indica la nacionalidad de todos los huéspedes.',
+                'huespedes.*.edad.required'         => 'Indica la edad de todos los huéspedes.',
+                'huespedes.*.edad.integer'          => 'La edad de los huéspedes debe ser un número entero.',
+                'huespedes.*.edad.max'              => 'Alguna edad introducida no es realista (máx. 120 años).',
+            ];
+
+            $request->validate([
+                'habitacion_id'   => 'required|exists:habitaciones,id',
+                'entrada'         => 'required|date',
+                'salida'          => 'required|date|after:entrada',
+                'total_huespedes' => 'required|numeric|min:1',
+                'precio'          => 'required|numeric|min:0',
+                'stripeToken'     => 'required|string',
+
+                'nombre_titular'      => 'required|string|max:100',
+                'apellido1_titular'   => 'nullable|string|max:100',
+                'apellido2_titular'   => 'nullable|string|max:100',
+                'dni_titular'         => 'nullable|string|max:20',
+                'nacionalidad_titular' => 'nullable|string|max:100',
+                'edad_titular'        => 'nullable|integer|min:0|max:120',
+                'email'               => 'nullable|email|max:150',
+
+                'huespedes.*.nombre'       => 'required|string|max:100',
+                'huespedes.*.apellido1'    => 'required|string|max:100',
+                'huespedes.*.apellido2'    => 'required|string|max:100',
+                'huespedes.*.dni'          => 'required|string|max:20',
+                'huespedes.*.nacionalidad' => 'required|string|max:100',
+                'huespedes.*.edad'         => 'required|integer|min:0|max:120',
+            ], $mensajes);
+        } catch (ValidationException $e) {
+            // Log detallado del fallo de validación
+            Log::error('Error de validación en procesarPago', [
+                'errores' => $e->errors(),
+                'input'   => $request->all(),
+                'usuario' => auth()->user()->id ?? 'visitante',
+            ]);
+
+            return back()
+                ->withErrors($e->validator)
+                ->withInput()
+                ->with('error', 'Por favor revisa los campos del formulario. Algunos datos no son válidos.');
+        }
+
 
         if (count($request->huespedes ?? []) !== (int) $request->total_huespedes) {
+            Log::warning('Número de huéspedes inconsistente en procesarPago', [
+                'total' => $request->total_huespedes,
+                'enviados' => count($request->huespedes ?? []),
+            ]);
+
             return back()->with('error', 'El número de huéspedes no coincide con los datos enviados.');
         }
 
         Stripe::setApiKey(env('STRIPE_SECRET'));
-
         DB::beginTransaction();
 
         try {
@@ -272,9 +332,8 @@ class ReservaController extends Controller
 
             $cancelableHasta = Carbon::parse($request->entrada)->subDays(7);
             $hoy = Carbon::today();
-
-            // 3️⃣ Determinar si debe cobrarse ya
             $debeCobrarYa = $hoy->greaterThanOrEqualTo($cancelableHasta);
+
             // 2️⃣ Crear PaymentIntent
             $paymentIntent = PaymentIntent::create([
                 'amount' => (int) round($request->precio * 100),
@@ -295,11 +354,7 @@ class ReservaController extends Controller
                 ],
             ]);
 
-            $cancelableHasta = Carbon::parse($request->entrada)->subDays(7);
-            $hoy = Carbon::today();
-            $debeCobrarYa = $hoy->greaterThanOrEqualTo($cancelableHasta);
-
-            // 3️⃣ Crear la reserva (ANTES del envío del correo)
+            // 3️⃣ Crear reserva
             $reserva = Reserva::create([
                 'habitacion_id'            => $request->habitacion_id,
                 'cliente_id'               => $cliente->id,
@@ -314,17 +369,17 @@ class ReservaController extends Controller
                 'notas'                    => 'Pago preautorizado por Stripe. ID: ' . $paymentIntent->id,
             ]);
 
-            // 4️⃣ Capturar pago y enviar correo
+            // 4️⃣ Capturar pago y correo
             if ($debeCobrarYa) {
                 $paymentIntent->capture();
                 Mail::to($cliente->email)->send(new \App\Mail\ConfirmacionPagoMail($reserva));
-                $mensaje = 'Reserva confirmada y pago realizado con éxito. Se ha enviado un correo con los detalles.';
+                $mensaje = 'Reserva confirmada y pago realizado con éxito.';
             } else {
                 Mail::to($cliente->email)->send(new \App\Mail\ConfirmacionReservaMail($reserva));
-                $mensaje = 'Reserva completada correctamente. El pago se capturará automáticamente 7 días antes del check-in. Se ha enviado un correo con los detalles.';
+                $mensaje = 'Reserva completada correctamente. Pago programado 7 días antes del check-in.';
             }
 
-            // 5️⃣ Guardar huéspedes
+            // 5️⃣ Guardar huéspedes adicionales
             foreach ($request->huespedes as $huesped) {
                 if (
                     strtolower($huesped['dni']) !== strtolower($request->dni_titular)
@@ -333,11 +388,31 @@ class ReservaController extends Controller
                     Cliente::firstOrCreate(['dni' => $huesped['dni']], $huesped);
                 }
             }
+
             DB::commit();
+
+            Log::info('Reserva creada correctamente', [
+                'reserva_id' => $reserva->id,
+                'cliente' => $cliente->email,
+                'habitacion' => $request->habitacion_id,
+                'precio' => $request->precio,
+                'estado' => $reserva->estado,
+            ]);
+
             return redirect()->route('dashboard')->with('success', $mensaje);
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->with('error', 'Error en el pago: ' . $e->getMessage());
+
+            // Log del error completo
+            Log::error('Error al procesar pago con Stripe o crear reserva', [
+                'mensaje' => $e->getMessage(),
+                'archivo' => $e->getFile(),
+                'linea' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'input' => $request->all(),
+            ]);
+
+            return back()->withInput()->with('error', 'Error en el pago: ' . $e->getMessage());
         }
     }
 
