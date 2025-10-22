@@ -23,6 +23,11 @@ class Habitacion extends Model
         'estado',
         'descripcion',
         'imagen',
+        'bloqueada',
+    ];
+
+    protected $casts = [
+        'bloqueada' => 'boolean',
     ];
 
     // Relaciones
@@ -181,6 +186,12 @@ class Habitacion extends Model
             'detalles' => $detalles
         ];
     }
+
+    public function scopeVisibles($query)
+    {
+        return $query->where('bloqueada', false);
+    }
+
     public function disponibilidadPorFecha(string $fecha): string|int
     {
         // Trae todas las reservas que cruzan con esa fecha exacta

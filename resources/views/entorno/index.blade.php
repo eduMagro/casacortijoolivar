@@ -1,10 +1,10 @@
 <x-app-layout>
-    <x-slot name="title">Entorno y Geología</x-slot>
+    <x-slot name="title">Entorno</x-slot>
 
     <section class="max-w-6xl mx-auto py-16 px-6 space-y-12">
         <header class="text-center">
             <h1 class="text-4xl font-extrabold text-gray-800 mb-4 tracking-tight">
-                Geología y entorno del Cortijo Olivar
+                Entorno de Casa Cortijo Olivar
             </h1>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
                 Observa el relieve y la orografía que rodean el cortijo. Este mapa muestra el terreno con

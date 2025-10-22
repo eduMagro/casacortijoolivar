@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HabitacionController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ReservaController;
+use App\Http\Controllers\GaleriaController;
+use App\Http\Controllers\GaleriaImagenController;
 
 Route::get('/', function () {
     return view('dashboard');
@@ -38,7 +40,8 @@ Route::post('/api/precios/update', [HabitacionController::class, 'updatePrecio']
     ->name('api.precios.update');
 Route::post('/api/precios/bulk-update', [HabitacionController::class, 'bulkUpdate'])
     ->name('api.precios.bulkUpdate');
-
+Route::patch('/habitaciones/{habitacion}/bloqueo', [HabitacionController::class, 'toggleBloqueo'])
+    ->name('habitaciones.toggle-bloqueo');
 
 // 👇 ESTE SIEMPRE AL FINAL
 Route::resource('habitaciones', HabitacionController::class);
@@ -68,15 +71,20 @@ Route::post('/pago/reserva', [ReservaController::class, 'procesarPago'])->name('
 Route::match(['get', 'post'], '/mis-reservas', [ReservaController::class, 'buscar'])->name('reservas.buscar');
 Route::delete('/reservas/{reserva}/cancelar', [ReservaController::class, 'cancelarReserva'])->name('reservas.cancelar');
 
-/*
-|--------------------------------------------------------------------------
-| Rutas de autenticación (login, registro, etc.)
-|--------------------------------------------------------------------------
-*/
-// Si decides luego proteger:
-Route::middleware('auth')->group(function () {
-    // Aquí metes las rutas sensibles
-});
+// Galerías
+Route::get('/galerias', [GaleriaController::class, 'index'])->name('instalaciones.index');
+Route::post('/galerias', [GaleriaController::class, 'store'])->name('galerias.store');
 
+// Acciones que requieren sesión
+Route::middleware('auth')->group(function () {
+    Route::patch('/galerias/{galeria}', [GaleriaController::class, 'update'])->name('galerias.update');
+
+    // Imágenes de una galería concreta
+    Route::post('/galerias/{galeria}/imagenes', [GaleriaImagenController::class, 'store'])
+        ->name('galerias.imagenes.store');
+
+    Route::delete('/galerias/imagenes/{imagen}', [GaleriaImagenController::class, 'destroy'])
+        ->name('galerias.imagenes.destroy');
+});
 
 require __DIR__ . '/auth.php';

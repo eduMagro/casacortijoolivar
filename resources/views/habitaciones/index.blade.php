@@ -127,6 +127,7 @@
                 class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center overflow-auto">
                 <div @click.away="modalImagenes = false"
                     class="bg-white p-6 rounded-lg shadow-lg w-[95vw] sm:w-[600px] max-w-full relative">
+
                     <h2 class="text-xl font-bold mb-4">Galería de imágenes</h2>
 
                     <template x-if="habitacionId">
@@ -172,7 +173,9 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
                 @forelse ($habitaciones as $habitacion)
                     <div class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col relative">
+
                         {{-- Carrusel --}}
+
                         @if ($habitacion->imagenes->isNotEmpty())
                             <div class="relative h-48 bg-gray-100 flex items-center justify-center text-gray-400"
                                 x-data="{
@@ -202,6 +205,32 @@
 
                         <div class="p-4 flex flex-col gap-2">
                             <h2 class="text-xl font-bold">{{ $habitacion->nombre }}</h2>
+                            @auth
+                                <button type="button"
+                                    class="btn-bloqueo shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white shadow border border-gray-200 hover:bg-gray-50"
+                                    data-id="{{ $habitacion->id }}" data-bloqueada="{{ (int) $habitacion->bloqueada }}"
+                                    title="{{ $habitacion->bloqueada ? 'Habitación bloqueada' : 'Habitación desbloqueada' }}">
+                                    @if ($habitacion->bloqueada)
+                                        {{-- Candado CERRADO (rojo) --}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-600"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="11" width="18" height="11" rx="2"
+                                                ry="2"></rect>
+                                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                        </svg>
+                                    @else
+                                        {{-- Candado ABIERTO (verde) --}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-600"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="11" width="18" height="11" rx="2"
+                                                ry="2"></rect>
+                                            <path d="M7 11V7a5 5 0 0 1 9 0"></path>
+                                        </svg>
+                                    @endif
+                                </button>
+                            @endauth
                             <p class="text-sm text-gray-600 capitalize">Tipo: {{ $habitacion->tipo }}</p>
                             <p class="text-sm text-gray-600">Capacidad: {{ $habitacion->capacidad }} personas</p>
                             <p class="text-xs text-gray-500">{{ $habitacion->imagenes->count() }} imágenes</p>
@@ -451,4 +480,78 @@
             @endforeach
         });
     </script>
+    {{-- Toggle bloqueo/desbloqueo de habitación --}}
+    <script>
+        document.addEventListener('click', async (ev) => {
+            const btn = ev.target.closest('.btn-bloqueo');
+            if (!btn) return;
+
+            const id = btn.dataset.id;
+            const bloqueada = Number(btn.dataset.bloqueada) === 1; // true si 1
+            const accion = bloqueada ? 'desbloquear' : 'bloquear';
+
+            const {
+                isConfirmed
+            } = await Swal.fire({
+                title: `¿Seguro que quieres ${accion} esta habitación?`,
+                text: bloqueada ?
+                    'Pasará a estar disponible para el público (si cumples tus filtros).' :
+                    'Quedará bloqueada para usuarios no autenticados.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, continuar',
+                cancelButtonText: 'Cancelar'
+            });
+            if (!isConfirmed) return;
+
+            try {
+                const url = "{{ route('habitaciones.toggle-bloqueo', ':id') }}".replace(':id', id);
+                const res = await fetch(url, {
+                    method: 'PATCH',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (res.status === 401 || res.status === 419) {
+                    await Swal.fire('Autenticación requerida', 'Inicia sesión para realizar esta acción.',
+                        'warning');
+                    return;
+                }
+
+                const data = await res.json();
+                if (!res.ok || !data.ok) throw new Error(data.message || 'No se pudo actualizar el estado.');
+
+                // Actualiza dataset e icono
+                btn.dataset.bloqueada = data.bloqueada ? 1 : 0;
+                pintarCandado(btn, data.bloqueada);
+
+                Swal.fire('Hecho', `La habitación ahora está ${data.bloqueada ? 'bloqueada' : 'desbloqueada'}.`,
+                    'success');
+            } catch (e) {
+                console.error(e);
+                Swal.fire('Error', e.message || 'Hubo un problema al cambiar el estado.', 'error');
+            }
+        });
+
+        function pintarCandado(btn, bloqueada) {
+            if (bloqueada) {
+                btn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>`;
+            } else {
+                btn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 9 0"></path>
+            </svg>`;
+            }
+        }
+    </script>
+
 </x-app-layout>

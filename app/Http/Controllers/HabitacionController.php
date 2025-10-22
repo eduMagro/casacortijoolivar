@@ -14,6 +14,7 @@ use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
 
 class HabitacionController extends Controller
 {
@@ -22,17 +23,36 @@ class HabitacionController extends Controller
      */
     public function index()
     {
-        $habitaciones = Habitacion::with('imagenes')->get();
+        $habitaciones = Habitacion::with('imagenes')
+            ->when(!Auth::check(), fn($query) => $query->visibles())
+            ->orderBy('modo_reserva')
+            ->orderBy('nombre')
+            ->get();
+
         return view('habitaciones.index', compact('habitaciones'));
     }
-
-
-    public function disponibles()
+    public function toggleBloqueo(\App\Models\Habitacion $habitacion)
     {
-        $habitaciones = Habitacion::all();
+        // $this->authorize('update', $habitacion); // opcional si tienes Policy
 
-        return view('habitaciones.disponibles', compact('habitaciones'));
+        try {
+            $habitacion->bloqueada = $habitacion->bloqueada ? 0 : 1;
+            $habitacion->save();
+
+            return response()->json([
+                'ok'           => true,
+                'habitacion_id' => $habitacion->id,
+                'bloqueada'    => (bool) $habitacion->bloqueada,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('[Habitacion] toggleBloqueo error', ['id' => $habitacion->id, 'e' => $e->getMessage()]);
+            return response()->json([
+                'ok'      => false,
+                'message' => 'No se pudo cambiar el estado de bloqueo.'
+            ], 500);
+        }
     }
+
 
     public function eventosDisponibilidad(Request $request, Habitacion $habitacion)
     {
