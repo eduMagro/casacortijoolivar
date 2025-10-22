@@ -361,7 +361,7 @@ class HabitacionController extends Controller
     public function subirImagenes(Request $request, Habitacion $habitacion)
     {
         $request->validate([
-            'imagenes.*' => 'image|max:4096',
+            'imagenes.*' => 'image|max:10240', // Máximo 10 MB por imagen
         ]);
 
         foreach ($request->file('imagenes', []) as $imagen) {
