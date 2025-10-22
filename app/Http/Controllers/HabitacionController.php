@@ -488,7 +488,7 @@ class HabitacionController extends Controller
         Mail::raw(
             "Mensaje de: {$request->nombre}\nEmail: {$request->email}\n\n{$request->mensaje}",
             function ($m) use ($request) {
-                $m->to('reservas@casacortijoolivar.es', 'Casa Cortijo Olivar')
+                $m->to('reservas@casacortijoolivar.com', 'Casa Cortijo Olivar')
                     ->subject('Nuevo mensaje de contacto');
             }
         );

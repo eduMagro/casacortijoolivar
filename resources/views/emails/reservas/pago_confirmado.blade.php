@@ -22,7 +22,7 @@
 
 
     Si tienes cualquier duda o necesitas modificar algo, contáctanos en
-    📧 **reservas@casacortijoolivar.es**
+    📧 **reservas@casacortijoolivar.com**
 
     Gracias por confiar en nosotros,
     **El equipo de Casa Cortijo Olivar**
