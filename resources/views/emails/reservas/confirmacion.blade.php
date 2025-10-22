@@ -26,9 +26,6 @@
 
     ---
 
-    @component('mail::button', ['url' => route('reservas.show', $reserva->id)])
-        Ver mi reserva
-    @endcomponent
 
     Gracias por confiar en **Casa Cortijo Olivar**.
     ¡Te esperamos con ilusión!

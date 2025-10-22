@@ -20,12 +20,9 @@
     Te esperamos con los brazos abiertos el día
     **{{ \Carbon\Carbon::parse($reserva->fecha_entrada)->translatedFormat('d F Y') }}**.
 
-    @component('mail::button', ['url' => route('reservas.show', $reserva->id)])
-        Ver mi reserva
-    @endcomponent
 
     Si tienes cualquier duda o necesitas modificar algo, contáctanos en
-    📧 **info@casacortijoolivar.es** o ☎️ **+34 600 123 456**
+    📧 **reservas@casacortijoolivar.es**
 
     Gracias por confiar en nosotros,
     **El equipo de Casa Cortijo Olivar**
