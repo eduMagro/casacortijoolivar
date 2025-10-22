@@ -140,10 +140,11 @@
                                             class="absolute top-1 right-1 delete-form">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="button"
+                                            <button type="submit"
                                                 class="bg-red-500 text-white rounded-full p-1 text-xs hover:bg-red-700 delete-btn">
                                                 ✕
                                             </button>
+
                                         </form>
                                     </div>
                                 </template>
