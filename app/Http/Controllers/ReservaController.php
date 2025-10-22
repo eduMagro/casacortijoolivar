@@ -21,22 +21,93 @@ use Stripe\PaymentIntent;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ConfirmacionReservaMail;
 
+use Illuminate\Database\Eloquent\Builder;
+
 
 class ReservaController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+
+    public function index(Request $request)
     {
+        $query = Reserva::query()->with(['cliente', 'habitacion']);
+
+        $this->aplicarFiltros($query, $request);
+
         $reservas = Reserva::with('cliente', 'habitacion')
             ->orderBy('fecha_entrada', 'asc') // más cercanas primero
             ->get();
 
 
-        return view('reservas.index', compact('reservas'));
+        // datos para selects
+        $habitaciones = Habitacion::select('id', 'nombre')->orderBy('id')->get();
+        $estados = Reserva::select('estado')->distinct()->pluck('estado')->filter()->values();
+
+        return view('reservas.index', compact('reservas', 'habitaciones', 'estados'));
     }
 
+    protected function aplicarFiltros(Builder $q, Request $r): void
+    {
+        // Cliente: nombre completo / email / teléfono
+        $q->when($r->filled('cliente'), function (Builder $qq) use ($r) {
+            $term = trim((string)$r->input('cliente'));
+            $like = '%' . str_replace(' ', '%', $term) . '%';
+            $qq->whereHas('cliente', function (Builder $qc) use ($like) {
+                $qc->where(DB::raw("CONCAT_WS(' ', COALESCE(nombre,''), COALESCE(apellidos,''))"), 'like', $like)
+                    ->orWhere('email', 'like', $like)
+                    ->orWhere('telefono', 'like', $like);
+            });
+        });
+
+        // Habitación
+        $q->when(
+            $r->filled('habitacion_id'),
+            fn(Builder $qq) =>
+            $qq->where('habitacion_id', (int)$r->input('habitacion_id'))
+        );
+
+        // Entrada (rango)
+        $q->when(
+            $r->filled('entrada_desde'),
+            fn(Builder $qq) =>
+            $qq->whereDate('fecha_entrada', '>=', $r->date('entrada_desde'))
+        )->when(
+            $r->filled('entrada_hasta'),
+            fn(Builder $qq) =>
+            $qq->whereDate('fecha_entrada', '<=', $r->date('entrada_hasta'))
+        );
+
+        // Salida (rango)
+        $q->when(
+            $r->filled('salida_desde'),
+            fn(Builder $qq) =>
+            $qq->whereDate('fecha_salida', '>=', $r->date('salida_desde'))
+        )->when(
+            $r->filled('salida_hasta'),
+            fn(Builder $qq) =>
+            $qq->whereDate('fecha_salida', '<=', $r->date('salida_hasta'))
+        );
+
+        // Personas min/max
+        $q->when(
+            $r->filled('personas_min'),
+            fn(Builder $qq) =>
+            $qq->where('personas', '>=', (int)$r->input('personas_min'))
+        )->when(
+            $r->filled('personas_max'),
+            fn(Builder $qq) =>
+            $qq->where('personas', '<=', (int)$r->input('personas_max'))
+        );
+
+        // Estado
+        $q->when(
+            $r->filled('estado'),
+            fn(Builder $qq) =>
+            $qq->where('estado', (string)$r->input('estado'))
+        );
+    }
 
     public function apiReservas()
     {
