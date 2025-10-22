@@ -13,13 +13,23 @@
     - 📅 **Salida:** {{ \Carbon\Carbon::parse($reserva->fecha_salida)->format('d/m/Y') }}
     - 👥 **Huéspedes:** {{ $reserva->personas }}
     - 💰 **Importe pagado:** {{ number_format($reserva->precio_total, 2) }} €
+    - 🔑 **Localizador:** **{{ $reserva->localizador }}**
 
-    ---
+    @component('mail::panel')
+        <p style="margin:0 0 8px;font-weight:600">Tu código QR</p>
+        @if (!empty($qrCid))
+            <img src="{{ $qrCid }}" alt="QR de la reserva {{ $reserva->localizador }}" width="160" height="160"
+                style="display:block;margin:8px auto;border-radius:8px;">
+        @else
+            <p>Si no ves el QR, presenta este localizador al llegar:
+                <strong>{{ $reserva->localizador }}</strong>
+            </p>
+        @endif
+    @endcomponent
 
     Tu reserva está **confirmada y pagada**.
     Te esperamos con los brazos abiertos el día
     **{{ \Carbon\Carbon::parse($reserva->fecha_entrada)->translatedFormat('d F Y') }}**.
-
 
     Si tienes cualquier duda o necesitas modificar algo, contáctanos en
     📧 **reservas@casacortijoolivar.com**

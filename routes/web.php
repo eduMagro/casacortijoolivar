@@ -70,6 +70,10 @@ Route::post('/pago/reserva', [ReservaController::class, 'procesarPago'])->name('
 
 Route::match(['get', 'post'], '/mis-reservas', [ReservaController::class, 'buscar'])->name('reservas.buscar');
 Route::delete('/reservas/{reserva}/cancelar', [ReservaController::class, 'cancelarReserva'])->name('reservas.cancelar');
+Route::post('/reservas/check/{tipo}', [ReservaController::class, 'marcarCheck'])
+    ->whereIn('tipo', ['in', 'out', 'auto'])
+    ->name('reservas.check')
+    ->middleware('auth');
 
 // Galerías
 Route::get('/galerias', [GaleriaController::class, 'index'])->name('instalaciones.index');

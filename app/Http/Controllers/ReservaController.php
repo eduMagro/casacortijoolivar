@@ -24,6 +24,7 @@ use App\Mail\ConfirmacionReservaMail;
 use Illuminate\Database\Eloquent\Builder;
 
 
+
 class ReservaController extends Controller
 {
     /**
@@ -36,17 +37,16 @@ class ReservaController extends Controller
 
         $this->aplicarFiltros($query, $request);
 
-        $reservas = Reserva::with('cliente', 'habitacion')
+        $reservas = $query
             ->orderBy('fecha_entrada', 'asc') // más cercanas primero
             ->get();
 
-
-        // datos para selects
         $habitaciones = Habitacion::select('id', 'nombre')->orderBy('id')->get();
         $estados = Reserva::select('estado')->distinct()->pluck('estado')->filter()->values();
 
         return view('reservas.index', compact('reservas', 'habitaciones', 'estados'));
     }
+
 
     protected function aplicarFiltros(Builder $q, Request $r): void
     {
@@ -54,8 +54,9 @@ class ReservaController extends Controller
         $q->when($r->filled('cliente'), function (Builder $qq) use ($r) {
             $term = trim((string)$r->input('cliente'));
             $like = '%' . str_replace(' ', '%', $term) . '%';
+
             $qq->whereHas('cliente', function (Builder $qc) use ($like) {
-                $qc->where(DB::raw("CONCAT_WS(' ', COALESCE(nombre,''), COALESCE(apellidos,''))"), 'like', $like)
+                $qc->where(DB::raw("CONCAT_WS(' ', COALESCE(nombre,''), COALESCE(apellido1,''), COALESCE(apellido2,''))"), 'like', $like)
                     ->orWhere('email', 'like', $like)
                     ->orWhere('telefono', 'like', $like);
             });
@@ -109,20 +110,66 @@ class ReservaController extends Controller
         );
     }
 
-    public function apiReservas()
+    public function apiReservas(Request $request)
     {
-        $reservas = Reserva::with('cliente', 'habitacion')->get();
+        $tz     = config('app.timezone', 'Europe/Madrid');
+        $start  = $request->query('start') ? Carbon::parse($request->query('start'))->setTimezone($tz)->startOfDay() : now($tz)->subMonths(6)->startOfDay();
+        $end    = $request->query('end')   ? Carbon::parse($request->query('end'))->setTimezone($tz)->endOfDay()   : now($tz)->addMonths(12)->endOfDay();
 
-        $eventos = $reservas->map(function ($reserva) {
+        $reservas = Reserva::with([
+            'cliente:id,nombre,apellido1,apellido2',   // 👈 columnas reales
+            'habitacion:id,nombre',
+        ])
+            ->whereDate('fecha_entrada', '<', $end->toDateString())
+            ->whereDate('fecha_salida', '>=', $start->toDateString())
+            ->get();
+
+        $palette = [
+            'confirmada' => ['bg' => '#10B981', 'txt' => '#FFFFFF'],
+            'pendiente'  => ['bg' => '#F59E0B', 'txt' => '#111827'],
+            'cancelada'  => ['bg' => '#EF4444', 'txt' => '#FFFFFF'],
+            'completada' => ['bg' => '#6B7280', 'txt' => '#FFFFFF'],
+        ];
+
+        $eventos = $reservas->map(function ($r) use ($palette) {
+            $estado = strtolower((string) $r->estado);
+            $colors = $palette[$estado] ?? ['bg' => '#4F46E5', 'txt' => '#FFFFFF'];
+
+            $entrada = Carbon::parse($r->fecha_entrada);
+            $salida  = Carbon::parse($r->fecha_salida);
+            $noches  = max(0, $entrada->diffInDays($salida));
+
+            // 👇 nombre “completo” desde nombre + apellido1 + apellido2 (tolerante a null/'' )
+            $cliente = trim(implode(' ', array_filter([
+                $r->cliente->nombre ?? '',
+                $r->cliente->apellido1 ?? '',
+                $r->cliente->apellido2 ?? '',
+            ])));
+
+            $habitacion = $r->habitacion->nombre ?? '—';
+
             return [
-                'title' => $reserva->cliente->nombre_completo . ' - ' . $reserva->habitacion->nombre . ' - ' . $reserva->personas . ' personas',
-                'start' => $reserva->fecha_entrada,
-                'end'   => Carbon::parse($reserva->fecha_salida)->addDay()->toDateString(), // incluir fecha_salida
-                'color' => '#4F46E5',
+                'id'              => 'reserva-' . $r->id,
+                'title'           => $habitacion . ' · ' . $cliente,
+                'start'           => $entrada->toDateString(),
+                'end'             => $salida->copy()->addDay()->toDateString(), // inclusivo en month view
+                'backgroundColor' => $colors['bg'],
+                'borderColor'     => $colors['bg'],
+                'textColor'       => $colors['txt'],
+                'classNames'      => ['reserva', 'estado-' . $estado],
+                'extendedProps'   => [
+                    'cliente'    => $cliente,
+                    'habitacion' => $habitacion,
+                    'personas'   => (int) $r->personas,
+                    'estado'     => (string) $r->estado,
+                    'noches'     => $noches,
+                    'entrada'    => $entrada->format('d/m/Y'),
+                    'salida'     => $salida->format('d/m/Y'),
+                ],
             ];
         });
 
-        return response()->json($eventos);
+        return response()->json($eventos->values());
     }
 
     /**
@@ -554,6 +601,96 @@ class ReservaController extends Controller
     }
 
     //Localizar tu reserva
+    // ReservaController.php (solo el método)
+    public function marcarCheck(Request $request, string $tipo)
+    {
+        $request->validate(['code' => 'required|string|max:255']);
+        $raw = trim($request->input('code', ''));
+
+        // --- extraer token/localizador ---
+        $token = null;
+        if (preg_match('#/checkin/([A-Za-z0-9_-]{10,})#', $raw, $m)) $token = $m[1];
+        if (!$token && preg_match('#[?&]token=([A-Za-z0-9_-]{10,})#', $raw, $m)) $token = $m[1];
+
+        $loc = null;
+        if (preg_match('#\bCCO-[A-Z0-9]{4,}\b#i', $raw, $m)) $loc = strtoupper($m[0]);
+        if (!$loc && preg_match('#[?&]loc=(CCO-[A-Za-z0-9%-]+)#i', $raw, $m)) $loc = strtoupper(urldecode($m[1]));
+        if (!$loc && preg_match('#^[A-Z0-9-]{5,}$#', strtoupper($raw))) $loc = strtoupper($raw);
+
+        $reserva = \App\Models\Reserva::query()
+            ->when($token, fn($q) => $q->orWhere('checkin_token', $token))
+            ->when($loc,   fn($q) => $q->orWhere('localizador', $loc))
+            ->first();
+
+        if (!$reserva) {
+            return response()->json(['ok' => false, 'message' => 'No se encontró la reserva.'], 404);
+        }
+
+        // AUTO decide
+        if ($tipo === 'auto') {
+            $tipo = $reserva->check_in_at ? 'out' : 'in';
+        }
+
+        // ✅ Fallback: si llaman /in pero ya tiene check-in y NO check-out ⇒ hacemos out.
+        if ($tipo === 'in' && $reserva->check_in_at && !$reserva->check_out_at) {
+            $tipo = 'out';
+        }
+
+        $hoy     = now()->startOfDay();
+        $entrada = \Carbon\Carbon::parse($reserva->fecha_entrada)->startOfDay();
+
+        if ($tipo === 'in') {
+            if ($hoy->lt($entrada)) {
+                return response()->json(['ok' => false, 'message' => 'Aún no es día de entrada.'], 422);
+            }
+            if ($reserva->check_in_at) {
+                return response()->json([
+                    'ok'          => true,
+                    'already'     => true,
+                    'applied'     => 'in',
+                    'message'     => 'Ya tenía check-in.',
+                    'localizador' => $reserva->localizador,
+                    'checkin_at'  => optional($reserva->check_in_at)->toDateTimeString(),
+                ]);
+            }
+            \DB::transaction(function () use ($reserva) {
+                $reserva->forceFill(['check_in_at' => now()])->save();
+            });
+            return response()->json([
+                'ok'          => true,
+                'applied'     => 'in',
+                'message'     => 'Check-in realizado.',
+                'localizador' => $reserva->localizador,
+                'checkin_at'  => optional($reserva->check_in_at)->toDateTimeString(),
+            ]);
+        }
+
+        // tipo === 'out'
+        if (!$reserva->check_in_at) {
+            return response()->json(['ok' => false, 'message' => 'No puede hacer check-out sin check-in previo.'], 422);
+        }
+        if ($reserva->check_out_at) {
+            return response()->json([
+                'ok'           => true,
+                'already'      => true,
+                'applied'      => 'out',
+                'message'      => 'Ya tenía check-out.',
+                'localizador'  => $reserva->localizador,
+                'checkout_at'  => optional($reserva->check_out_at)->toDateTimeString(),
+            ]);
+        }
+        \DB::transaction(function () use ($reserva) {
+            $reserva->forceFill(['check_out_at' => now()])->save();
+        });
+        return response()->json([
+            'ok'           => true,
+            'applied'      => 'out',
+            'message'      => 'Check-out realizado.',
+            'localizador'  => $reserva->localizador,
+            'checkout_at'  => optional($reserva->check_out_at)->toDateTimeString(),
+        ]);
+    }
+
 
     public function buscar(Request $request)
     {

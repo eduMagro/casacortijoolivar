@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 
 class Reserva extends Model
 {
@@ -17,6 +16,8 @@ class Reserva extends Model
         'telefono',
         'fecha_entrada',
         'fecha_salida',
+        'check_in_at',
+        'check_out_at',
         'personas',
         'estado',
         'notas',
@@ -26,17 +27,20 @@ class Reserva extends Model
         'cancelable_hasta',
     ];
 
-    protected $dates = [
-        'fecha_entrada',
-        'fecha_salida',
-        'cancelable_hasta',
-        'created_at',
-        'updated_at',
+    // 👇 Aquí van los casts (no en $fillable)
+    protected $casts = [
+        'fecha_entrada'    => 'date',
+        'fecha_salida'     => 'date',
+        'cancelable_hasta' => 'datetime',
+        'check_in_at'      => 'datetime',
+        'check_out_at'     => 'datetime',
+        'personas'         => 'integer',
+        'precio_total'     => 'decimal:2',
+        'created_at'       => 'datetime',
+        'updated_at'       => 'datetime',
     ];
 
-    /** 
-     * RELACIONES
-     */
+    /** RELACIONES */
     public function habitacion()
     {
         return $this->belongsTo(Habitacion::class);
@@ -47,28 +51,27 @@ class Reserva extends Model
         return $this->belongsTo(Cliente::class);
     }
 
-    /**
-     * ACCESORES / HELPERS
-     */
+    /** ACCESORES / HELPERS */
 
-    // Saber si puede cancelarse aún
     public function getEsCancelableAttribute(): bool
     {
-        return $this->cancelable_hasta && now()->lessThanOrEqualTo($this->cancelable_hasta);
+        return $this->cancelable_hasta !== null
+            && now()->lessThanOrEqualTo($this->cancelable_hasta);
     }
 
-    // Saber si ya fue cobrada
     public function getEstaCobradaAttribute(): bool
     {
-        return $this->stripe_payment_status === 'capturado' || $this->estado === 'confirmada';
+        return $this->stripe_payment_status === 'capturado'
+            || $this->estado === 'confirmada';
     }
 
-    // Saber si está en plazo de captura (7 días antes)
     public function getDebeCapturarseAttribute(): bool
     {
-        return $this->estado === 'pendiente'
-            && $this->fecha_entrada
-            && now()->greaterThanOrEqualTo(Carbon::parse($this->fecha_entrada)->subDays(7));
+        if ($this->estado !== 'pendiente' || !$this->fecha_entrada) {
+            return false;
+        }
+        // fecha_entrada ya es Carbon por el cast
+        return now()->greaterThanOrEqualTo($this->fecha_entrada->copy()->subDays(7));
     }
 
     protected static function booted()
@@ -83,22 +86,3 @@ class Reserva extends Model
         });
     }
 }
-/**
- * 💼 COMANDO AUTOMÁTICO: RESERVAS:CAPTURAR
- * -----------------------------------------
- * Cada día a las 03:00 se ejecuta el comando 'reservas:capturar' que revisa
- * las reservas con estado 'pendiente' cuyo check-in es en 7 días, e intenta
- * capturar el pago pendiente a través de Stripe.
- *
- * Esto asegura que las reservas se confirmen automáticamente si el pago se
- * realiza correctamente, mejorando la eficiencia del proceso de reserva.
- *
- * El comando está programado en routes/console.php usando el scheduler de
- * Laravel, y registra su actividad en storage/logs/scheduler.log.
- *
- * Puedes probar el comando manualmente con:
- * php artisan reservas:capturar
- *
- * O listar todas las tareas programadas con:
- * php artisan schedule:list
- */
