@@ -1,6 +1,80 @@
 <x-app-layout>
     <x-slot name="title">Habitaciones</x-slot>
+    {{-- Estilo para x-cloak --}}
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
 
+        /* Estilos para FullCalendar */
+        .fc {
+            font-size: 0.75rem !important;
+        }
+
+        .fc-toolbar-title {
+            font-size: 1rem !important;
+            font-weight: bold;
+        }
+
+        /* Hacer las celdas más cuadradas */
+        .fc .fc-daygrid-day {
+            aspect-ratio: 1 / 1;
+            min-height: 0 !important;
+        }
+
+        .fc .fc-daygrid-day-frame {
+            min-height: 0 !important;
+            padding: 2px !important;
+        }
+
+        .fc .fc-daygrid-day-top {
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .fc .fc-daygrid-day-number {
+            padding: 2px 4px !important;
+            font-size: 0.7rem !important;
+            font-weight: 600;
+        }
+
+        /* Estilo para los eventos (número de camas disponibles) */
+        .fc-event-title {
+            display: flex !important;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.75rem !important;
+            font-weight: 700 !important;
+            color: #000 !important;
+            height: 100%;
+            text-align: center;
+            opacity: 1 !important;
+            padding: 2px !important;
+            line-height: 1 !important;
+        }
+
+        /* Contenedor de eventos para que no se pise con el número del día */
+        .fc .fc-daygrid-day-events {
+            margin-top: 0 !important;
+            min-height: 18px !important;
+        }
+
+        .fc .fc-daygrid-event {
+            margin: 1px 0 !important;
+            padding: 1px 2px !important;
+        }
+
+        /* Por si usas display: 'background' */
+        .fc-event.fc-event-background .fc-event-title {
+            opacity: 1 !important;
+        }
+
+        /* Ajustar altura de las celdas del body */
+        .fc .fc-scrollgrid-section-body>td {
+            height: auto !important;
+        }
+    </style>
     <div class="max-w-7xl mx-auto py-8 px-4">
         <div x-data="{
             modalCrear: false,
@@ -24,43 +98,80 @@
             }
         }">
             @auth
-                <div class="mb-4">
+                <div class="mb-6 flex flex-wrap gap-3">
                     <button @click="modalCrear = true"
-                        class="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded">
-                        + Nueva habitación
+                        class="inline-flex items-center justify-center px-6 py-2.5 rounded-lg 
+                        bg-white hover:bg-gray-50 
+                        text-gray-800 font-semibold 
+                        border border-gray-200 hover:border-gray-300
+                        shadow-sm hover:shadow-md 
+                        transition-all duration-200">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Nueva habitación
                     </button>
                     <a href="{{ route('habitaciones.calendarioPrecios') }}"
-                        class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow">
+                        class="inline-flex items-center justify-center px-6 py-2.5 rounded-lg 
+                        bg-gray-800 hover:bg-gray-900 
+                        text-white font-semibold 
+                        shadow-sm hover:shadow-md 
+                        transition-all duration-200">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
                         Ver calendario de precios
                     </a>
                 </div>
             @endauth
 
             {{-- Modal CREAR --}}
-            <div x-show="modalCrear" x-transition class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+            <div x-show="modalCrear" x-cloak x-transition
+                class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                 <div @click.away="modalCrear = false"
-                    class="bg-white p-6 rounded-lg shadow-lg w-[90vw] sm:w-[500px] max-w-full relative">
-                    <h2 class="text-xl font-bold mb-4">Nueva habitación</h2>
+                    class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative overflow-hidden">
+
+                    <div class="px-6 pt-6 pb-4 border-b border-gray-100">
+                        <h2 class="text-2xl font-bold text-gray-800">Nueva habitación</h2>
+                    </div>
 
                     <form action="{{ route('habitaciones.store') }}" method="POST" enctype="multipart/form-data"
-                        class="space-y-4">
+                        class="p-6 space-y-5">
                         @csrf
                         <div>
-                            <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre</label>
+                            <label for="nombre" class="block text-sm font-semibold text-gray-700 mb-2">Nombre</label>
                             <input type="text" name="nombre" id="nombre" required
-                                class="w-full border-gray-300 rounded mt-1 px-3 py-2 shadow-sm focus:ring-green-500 focus:border-green-500">
+                                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 
+                                focus:ring-2 focus:ring-gray-200 focus:border-gray-400 
+                                transition-all duration-200">
                         </div>
 
                         <div>
-                            <label for="capacidad" class="block text-sm font-medium text-gray-700">Capacidad</label>
+                            <label for="descripcion"
+                                class="block text-sm font-semibold text-gray-700 mb-2">Descripción</label>
+                            <textarea name="descripcion" id="descripcion" rows="3"
+                                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 
+                                focus:ring-2 focus:ring-gray-200 focus:border-gray-400 
+                                transition-all duration-200 resize-none"
+                                placeholder="Describe las características de la habitación..."></textarea>
+                        </div>
+
+                        <div>
+                            <label for="capacidad"
+                                class="block text-sm font-semibold text-gray-700 mb-2">Capacidad</label>
                             <input type="number" name="capacidad" id="capacidad" min="1" max="20" required
-                                class="w-full border-gray-300 rounded mt-1 px-3 py-2 shadow-sm">
+                                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 
+                                focus:ring-2 focus:ring-gray-200 focus:border-gray-400 
+                                transition-all duration-200">
                         </div>
 
                         <div>
-                            <label for="tipo" class="block text-sm font-medium text-gray-700">Tipo</label>
+                            <label for="tipo" class="block text-sm font-semibold text-gray-700 mb-2">Tipo</label>
                             <select name="tipo" id="tipo" required
-                                class="w-full border-gray-300 rounded mt-1 px-3 py-2 shadow-sm">
+                                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 
+                                focus:ring-2 focus:ring-gray-200 focus:border-gray-400 
+                                transition-all duration-200">
                                 <option value="mixta">Mixta</option>
                                 <option value="masculina">Masculina</option>
                                 <option value="femenina">Femenina</option>
@@ -68,150 +179,211 @@
                         </div>
 
                         <div>
-                            <label for="modo_reserva" class="block text-sm font-medium text-gray-700">Modo de
+                            <label for="modo_reserva" class="block text-sm font-semibold text-gray-700 mb-2">Modo de
                                 reserva</label>
                             <select name="modo_reserva" id="modo_reserva" required
-                                class="w-full border-gray-300 rounded mt-1 px-3 py-2 shadow-sm">
+                                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 
+                                focus:ring-2 focus:ring-gray-200 focus:border-gray-400 
+                                transition-all duration-200">
                                 <option value="completa">Completa</option>
                                 <option value="por_cama">Por cama</option>
                             </select>
                         </div>
 
                         <div>
-                            <label for="imagenes" class="block text-sm font-medium text-gray-700">Subir imágenes</label>
+                            <label for="imagenes" class="block text-sm font-semibold text-gray-700 mb-2">Subir
+                                imágenes</label>
                             <input type="file" name="imagenes[]" multiple accept="image/*"
-                                class="w-full mt-1 text-sm">
+                                class="w-full text-sm text-gray-600
+                                file:mr-4 file:py-2.5 file:px-4
+                                file:rounded-lg file:border-0
+                                file:bg-gray-50 file:text-gray-700
+                                file:font-semibold
+                                hover:file:bg-gray-100
+                                file:transition-all file:duration-200
+                                cursor-pointer">
                         </div>
 
-                        <div class="flex justify-end gap-2 pt-4">
+                        <div class="flex gap-3 pt-4">
                             <button type="button" @click="modalCrear = false"
-                                class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancelar</button>
+                                class="flex-1 px-4 py-2.5 rounded-lg 
+                                bg-gray-100 hover:bg-gray-200 
+                                text-gray-700 font-semibold
+                                transition-all duration-200">
+                                Cancelar
+                            </button>
                             <button type="submit"
-                                class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Guardar</button>
+                                class="flex-1 px-4 py-2.5 rounded-lg 
+                                bg-gray-800 hover:bg-gray-900 
+                                text-white font-semibold
+                                shadow-sm hover:shadow-md
+                                transition-all duration-200">
+                                Guardar
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
 
             {{-- Modal EDITAR --}}
-            <div x-show="modalEditar" x-transition
-                class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+            <div x-show="modalEditar" x-cloak x-transition
+                class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                 <div @click.away="modalEditar = false"
-                    class="bg-white p-6 rounded-lg shadow-lg w-[90vw] sm:w-[500px] relative">
-                    <h2 class="text-xl font-bold mb-4">Editar habitación</h2>
+                    class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative overflow-hidden">
 
-                    <form :action="`/habitaciones/${habitacionEditar.id}`" method="POST" class="space-y-4">
+                    <div class="px-6 pt-6 pb-4 border-b border-gray-100">
+                        <h2 class="text-2xl font-bold text-gray-800">Editar habitación</h2>
+                    </div>
+
+                    <form :action="`/habitaciones/${habitacionEditar.id}`" method="POST" class="p-6 space-y-5">
                         @csrf
                         @method('PUT')
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre</label>
                             <input type="text" name="nombre" x-model="habitacionEditar.nombre"
-                                class="w-full border-gray-300 rounded mt-1 px-3 py-2 shadow-sm">
+                                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 
+                                focus:ring-2 focus:ring-gray-200 focus:border-gray-400 
+                                transition-all duration-200">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Capacidad</label>
-                            <input type="number" name="capacidad" x-model="habitacionEditar.capacidad"
-                                class="w-full border-gray-300 rounded mt-1 px-3 py-2 shadow-sm">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción</label>
+                            <textarea name="descripcion" x-model="habitacionEditar.descripcion" rows="3"
+                                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 
+                                focus:ring-2 focus:ring-gray-200 focus:border-gray-400 
+                                transition-all duration-200 resize-none"
+                                placeholder="Describe las características de la habitación..."></textarea>
                         </div>
-                        <div class="flex justify-end gap-2 pt-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Capacidad</label>
+                            <input type="number" name="capacidad" x-model="habitacionEditar.capacidad"
+                                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 
+                                focus:ring-2 focus:ring-gray-200 focus:border-gray-400 
+                                transition-all duration-200">
+                        </div>
+                        <div class="flex gap-3 pt-4">
                             <button type="button" @click="modalEditar = false"
-                                class="px-4 py-2 bg-gray-300 rounded">Cancelar</button>
-                            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Guardar</button>
+                                class="flex-1 px-4 py-2.5 rounded-lg 
+                                bg-gray-100 hover:bg-gray-200 
+                                text-gray-700 font-semibold
+                                transition-all duration-200">
+                                Cancelar
+                            </button>
+                            <button type="submit"
+                                class="flex-1 px-4 py-2.5 rounded-lg 
+                                bg-gray-800 hover:bg-gray-900 
+                                text-white font-semibold
+                                shadow-sm hover:shadow-md
+                                transition-all duration-200">
+                                Guardar
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
 
             {{-- Modal IMÁGENES --}}
-            <div x-show="modalImagenes" x-transition
-                class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center overflow-auto">
+            <div x-show="modalImagenes" x-cloak x-transition
+                class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center overflow-auto p-4">
                 <div @click.away="modalImagenes = false"
-                    class="bg-white p-6 rounded-lg shadow-lg w-[95vw] sm:w-[600px] max-w-full relative">
+                    class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative overflow-hidden">
 
-                    <h2 class="text-xl font-bold mb-4">Galería de imágenes</h2>
+                    <div class="px-6 pt-6 pb-4 border-b border-gray-100">
+                        <h2 class="text-2xl font-bold text-gray-800">Galería de imágenes</h2>
+                    </div>
 
                     <template x-if="habitacionId">
-                        <div class="space-y-4">
+                        <div class="p-6 space-y-6">
                             <div class="grid grid-cols-2 gap-4">
                                 <template x-for="img in imagenesHabitacion" :key="img.id">
-                                    <div class="relative">
-                                        <img :src="'{{ asset('storage') }}/' + img.ruta_imagen" class="rounded shadow">
+                                    <div class="relative group">
+                                        <img :src="'{{ asset('storage') }}/' + img.ruta_imagen"
+                                            class="rounded-lg shadow-sm w-full h-48 object-cover">
 
                                         <form :action="'{{ url('habitacion-imagenes') }}/' + img.id" method="POST"
-                                            class="absolute top-1 right-1 delete-form">
+                                            class="absolute top-2 right-2 delete-form">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
-                                                class="bg-red-500 text-white rounded-full p-1 text-xs hover:bg-red-700 delete-btn">
-                                                ✕
+                                                class="bg-white hover:bg-red-50 text-red-600 
+                                                rounded-full p-2 shadow-md
+                                                opacity-0 group-hover:opacity-100
+                                                transition-all duration-200 delete-btn">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
                                             </button>
-
                                         </form>
                                     </div>
                                 </template>
                             </div>
 
-                            {{-- Subida múltiple --}}
-                            <form :action="'{{ url('habitaciones') }}/' + habitacionId + '/imagenes'" method="POST"
-                                enctype="multipart/form-data" class="space-y-4 border-t pt-4">
+                            <form :action="`/habitaciones/${habitacionId}/imagenes`" method="POST"
+                                enctype="multipart/form-data" class="space-y-4">
                                 @csrf
-                                <input type="file" name="imagenes[]" multiple accept="image/*"
-                                    class="w-full mt-1 text-sm border-gray-300 rounded">
-                                <div class="flex justify-end gap-2 pt-4">
-                                    <button type="button" @click="modalImagenes = false"
-                                        class="px-4 py-2 bg-gray-300 rounded">Cerrar</button>
-                                    <button type="submit"
-                                        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Subir</button>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Agregar más
+                                        imágenes</label>
+                                    <input type="file" name="imagenes[]" multiple accept="image/*"
+                                        class="w-full text-sm text-gray-600
+                                        file:mr-4 file:py-2.5 file:px-4
+                                        file:rounded-lg file:border-0
+                                        file:bg-gray-50 file:text-gray-700
+                                        file:font-semibold
+                                        hover:file:bg-gray-100
+                                        file:transition-all file:duration-200
+                                        cursor-pointer">
                                 </div>
+                                <button type="submit"
+                                    class="w-full px-4 py-2.5 rounded-lg 
+                                    bg-gray-800 hover:bg-gray-900 
+                                    text-white font-semibold
+                                    shadow-sm hover:shadow-md
+                                    transition-all duration-200">
+                                    Subir imágenes
+                                </button>
                             </form>
+
+                            <button @click="modalImagenes = false"
+                                class="w-full px-4 py-2.5 rounded-lg 
+                                bg-gray-100 hover:bg-gray-200 
+                                text-gray-700 font-semibold
+                                transition-all duration-200">
+                                Cerrar
+                            </button>
                         </div>
                     </template>
                 </div>
             </div>
 
-            {{-- Tarjetas de habitaciones + Calendarios --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-                @forelse ($habitaciones as $habitacion)
-                    <div class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col relative">
+            {{-- Listado de habitaciones --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach ($habitaciones as $h)
+                    <div
+                        class="bg-white rounded-2xl shadow-sm hover:shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 group">
+                        {{-- Imagen --}}
+                        <div class="relative h-52 bg-gray-100 overflow-hidden">
+                            @if ($h->imagenes->isNotEmpty())
+                                <img src="{{ asset('storage/' . $h->imagenes->first()->ruta_imagen) }}"
+                                    alt="{{ $h->nombre }}"
+                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            @else
+                                <div class="w-full h-full flex items-center justify-center text-gray-400">
+                                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            @endif
 
-                        {{-- Carrusel --}}
-
-                        @if ($habitacion->imagenes->isNotEmpty())
-                            <div class="relative h-48 bg-gray-100 flex items-center justify-center text-gray-400"
-                                x-data="{
-                                    idx: 0,
-                                    imgs: {{ $habitacion->imagenes->pluck('ruta_imagen')->toJson() }},
-                                    get tieneImagenes() { return this.imgs && this.imgs.length > 0 },
-                                    anterior() { if (this.tieneImagenes) this.idx = (this.idx - 1 + this.imgs.length) % this.imgs.length },
-                                    siguiente() { if (this.tieneImagenes) this.idx = (this.idx + 1) % this.imgs.length }
-                                }">
-
-                                <template x-if="tieneImagenes">
-                                    <img :src="'{{ asset('storage') }}/' + imgs[idx]"
-                                        class="absolute inset-0 h-48 w-full object-cover rounded transition-all duration-500">
-
-                                </template>
-
-                                <button @click="anterior()" x-show="imgs.length > 1"
-                                    class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white px-2 py-1 rounded-full">‹</button>
-                                <button @click="siguiente()" x-show="imgs.length > 1"
-                                    class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white px-2 py-1 rounded-full">›</button>
-                            </div>
-                        @else
-                            <div class="h-48 bg-gray-100 flex items-center justify-center text-gray-400">
-                                Sin imagen
-                            </div>
-                        @endif
-
-                        <div class="p-4 flex flex-col gap-2">
-                            <h2 class="text-xl font-bold">{{ $habitacion->nombre }}</h2>
                             @auth
-                                <button type="button"
-                                    class="btn-bloqueo shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white shadow border border-gray-200 hover:bg-gray-50"
-                                    data-id="{{ $habitacion->id }}" data-bloqueada="{{ (int) $habitacion->bloqueada }}"
-                                    title="{{ $habitacion->bloqueada ? 'Habitación bloqueada' : 'Habitación desbloqueada' }}">
-                                    @if ($habitacion->bloqueada)
-                                        {{-- Candado CERRADO (rojo) --}}
+                                <button
+                                    class="btn-bloqueo absolute top-3 right-3 bg-white/90 backdrop-blur-sm
+                                    rounded-full p-2 shadow-md hover:scale-110 transition-all duration-200"
+                                    data-id="{{ $h->id }}" data-bloqueada="{{ $h->bloqueada ? 1 : 0 }}">
+                                    @if ($h->bloqueada)
                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-600"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round">
@@ -220,7 +392,6 @@
                                             <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                                         </svg>
                                     @else
-                                        {{-- Candado ABIERTO (verde) --}}
                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-600"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round">
@@ -231,79 +402,90 @@
                                     @endif
                                 </button>
                             @endauth
-                            <p class="text-sm text-gray-600 capitalize">Tipo: {{ $habitacion->tipo }}</p>
-                            <p class="text-sm text-gray-600">Capacidad: {{ $habitacion->capacidad }} personas</p>
-                            <p class="text-xs text-gray-500">{{ $habitacion->imagenes->count() }} imágenes</p>
+                        </div>
+
+                        {{-- Contenido --}}
+                        <div class="p-5">
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $h->nombre }}</h3>
+
+                            @if ($h->descripcion)
+                                <p class="text-sm text-gray-600 mb-3 leading-relaxed">{{ $h->descripcion }}</p>
+                            @endif
+
+                            <div class="space-y-2 mb-4">
+                                <p class="text-sm text-gray-600 flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                    Capacidad: <span class="font-semibold ml-1">{{ $h->capacidad }}</span>
+                                </p>
+                                <p class="text-sm text-gray-600 flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                    </svg>
+                                    Tipo: <span class="font-semibold ml-1 capitalize">{{ $h->tipo }}</span>
+                                </p>
+                                <p class="text-sm text-gray-600 flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
+                                    Modo: <span
+                                        class="font-semibold ml-1 capitalize">{{ str_replace('_', ' ', $h->modo_reserva) }}</span>
+                                </p>
+                            </div>
 
                             @auth
-                                <div class="mt-2 flex flex-wrap gap-2">
-                                    <button @click="habitacionEditar = {{ $habitacion }}, modalEditar = true"
-                                        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                                <div class="flex gap-2 mb-4">
+                                    <button @click="habitacionEditar = {{ json_encode($h) }}; modalEditar = true"
+                                        class="flex-1 px-3 py-2 rounded-lg 
+                                        bg-gray-50 hover:bg-gray-100 
+                                        text-gray-700 text-sm font-semibold
+                                        border border-gray-200
+                                        transition-all duration-200">
                                         Editar
                                     </button>
                                     <button
-                                        @click="habitacionId = {{ $habitacion->id }}; setImagenes({{ $habitacion->imagenes->toJson() }}); modalImagenes = true"
-                                        class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-sm">
+                                        @click="habitacionId = {{ $h->id }}; setImagenes({{ json_encode($h->imagenes) }}); modalImagenes = true"
+                                        class="flex-1 px-3 py-2 rounded-lg 
+                                        bg-gray-50 hover:bg-gray-100 
+                                        text-gray-700 text-sm font-semibold
+                                        border border-gray-200
+                                        transition-all duration-200">
                                         Imágenes
                                     </button>
-                                    <form action="{{ route('habitaciones.destroy', $habitacion) }}" method="POST"
+                                    <form action="{{ route('habitaciones.destroy', $h->id) }}" method="POST"
                                         class="delete-form">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="button"
-                                            class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm delete-btn">
-                                            Eliminar habitación
+                                        <button type="submit"
+                                            class="px-3 py-2 rounded-lg 
+                                            bg-red-50 hover:bg-red-100 
+                                            text-red-600 text-sm font-semibold
+                                            border border-red-200
+                                            transition-all duration-200 delete-btn">
+                                            Eliminar
                                         </button>
                                     </form>
                                 </div>
                             @endauth
 
-                            {{-- Calendario de disponibilidad (debajo de la tarjeta) --}}
-                            <div class="mt-4">
-                                <div id="cal-{{ $habitacion->id }}" class="text-xs"></div>
-                            </div>
+                            {{-- Calendario --}}
+                            <div id="calendar-{{ $h->id }}"
+                                class="rounded-lg overflow-hidden border border-gray-100 min-h-[400px]"></div>
                         </div>
                     </div>
-                @empty
-                    <p class="text-gray-600">No hay habitaciones registradas todavía.</p>
-                @endforelse
+                @endforeach
             </div>
         </div>
     </div>
 
-    {{-- Estilos para ajustar FullCalendar --}}
-    <style>
-        .fc {
-            font-size: 0.75rem !important;
-        }
-
-        .fc-toolbar-title {
-            font-size: 1rem !important;
-            font-weight: bold;
-        }
-
-        .fc-event-title {
-            display: flex !important;
-            justify-content: center;
-            align-items: center;
-            font-size: 0.9rem !important;
-            /* más grande */
-            font-weight: 700 !important;
-            /* más duro */
-            color: #000 !important;
-            /* más contraste */
-            height: 100%;
-            text-align: center;
-            opacity: 1 !important;
-        }
-
-        /* Por si usas display: 'background', que a veces difumina texto */
-        .fc-event.fc-event-background .fc-event-title {
-            opacity: 1 !important;
-        }
-    </style>
-
-    {{-- CDNs: FullCalendar + SweetAlert2 (si no los cargas en layout) --}}
+    {{-- Scripts --}}
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales-all.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -312,21 +494,24 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', e => {
+                btn.closest('form').addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    const form = btn.closest('.delete-form');
-                    Swal.fire({
-                        title: '¿Seguro?',
+                    const form = e.currentTarget;
+
+                    const result = await Swal.fire({
+                        title: '¿Estás seguro?',
                         text: 'Esta acción no se puede deshacer',
                         icon: 'warning',
                         showCancelButton: true,
-                        confirmButtonColor: '#d33',
-                        cancelButtonColor: '#3085d6',
                         confirmButtonText: 'Sí, eliminar',
-                        cancelButtonText: 'Cancelar'
-                    }).then(result => {
-                        if (result.isConfirmed) form.submit();
+                        cancelButtonText: 'Cancelar',
+                        confirmButtonColor: '#EF4444',
+                        cancelButtonColor: '#6B7280'
                     });
+
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
                 });
             });
         });
@@ -352,28 +537,29 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            @foreach ($habitaciones as $habitacion)
+            @foreach ($habitaciones as $h)
                 (function() {
-                    const el = document.getElementById('cal-{{ $habitacion->id }}');
+                    const el = document.getElementById('calendar-{{ $h->id }}');
                     if (!el) return;
 
-                    const urlEventos = @json(route('habitaciones.eventos', $habitacion));
-                    const urlPrecio = @json(route('habitaciones.precio', $habitacion));
-                    const modo = @json($habitacion->modo_reserva);
+                    const urlEventos = @json(route('habitaciones.eventos', $h));
+                    const urlPrecio = @json(route('habitaciones.precio', $h));
+                    const modo = @json($h->modo_reserva);
                     const esPorCama = (modo === 'por_cama');
-                    const capacidad = @json($habitacion->capacidad);
-                    const nombre = @json($habitacion->nombre);
-                    const habId = @json($habitacion->id);
+                    const capacidad = @json($h->capacidad);
+                    const nombre = @json($h->nombre);
+                    const habId = @json($h->id);
 
                     const cal = new FullCalendar.Calendar(el, {
                         initialView: 'dayGridMonth',
                         contentHeight: 'auto',
+                        height: 'auto',
                         headerToolbar: {
                             left: 'title',
                             right: 'prev,next'
                         },
-                        firstDay: 1, // ← lunes como primer día
-                        weekends: true, // ← muestra sábado y domingo (por si acaso)
+                        firstDay: 1,
+                        weekends: true,
                         locale: 'es',
                         selectable: true,
                         selectMirror: true,
@@ -381,15 +567,15 @@
                         select: function(info) {
                             const inicio = info.startStr;
 
-                            // fuerza fin: si el usuario selecciona un solo día, aseguramos que la salida sea el día siguiente
                             let finDate = new Date(info.end || info.start);
                             if (finDate <= new Date(inicio)) {
                                 finDate = new Date(inicio);
                                 finDate.setDate(finDate.getDate() + 1);
                             }
 
-                            // aseguramos formato YYYY-MM-DD local sin zonas
                             const fin = finDate.toLocaleDateString('sv-SE');
+                            let camas = capacidad;
+
                             const hacerReserva = () => {
                                 fetch(`${urlPrecio}?inicio=${inicio}&fin=${fin}&camas=${camas}`)
                                     .then(r => r.json())
@@ -404,13 +590,15 @@
                                             html: `
                                                 <p><strong>Habitación:</strong> ${nombre}</p>
                                                 <p><strong>Fechas:</strong> ${formatoFechaBonita(inicio, fin)}</p>
-                                                ${esPorCama ? `<p><strong>Camas:</strong> ${camas}</p>` : ''}
+                                                ${esPorCama ? `<p><strong>Camas:</strong> ${camas}</p>` : `<p><strong>Huéspedes:</strong> ${camas}</p>`}
                                                 <p><strong>Total:</strong> ${Number(total).toFixed(2)} €</p>
                                             `,
                                             icon: 'question',
                                             showCancelButton: true,
                                             confirmButtonText: 'Reservar',
-                                            cancelButtonText: 'Cancelar'
+                                            cancelButtonText: 'Cancelar',
+                                            confirmButtonColor: '#1F2937',
+                                            cancelButtonColor: '#6B7280'
                                         }).then(res => {
                                             if (res.isConfirmed) {
                                                 const params = new URLSearchParams({
@@ -440,6 +628,8 @@
                                     confirmButtonText: 'Continuar',
                                     showCancelButton: true,
                                     cancelButtonText: 'Cancelar',
+                                    confirmButtonColor: '#1F2937',
+                                    cancelButtonColor: '#6B7280',
                                     inputValidator: v => (!v || v < 1 || v > capacidad) ?
                                         'Introduce una cantidad válida de camas.' :
                                         undefined
@@ -462,6 +652,8 @@
                                     confirmButtonText: 'Continuar',
                                     showCancelButton: true,
                                     cancelButtonText: 'Cancelar',
+                                    confirmButtonColor: '#1F2937',
+                                    cancelButtonColor: '#6B7280',
                                     inputValidator: v => (!v || v < 1 || v > capacidad) ?
                                         'Introduce un número válido de huéspedes.' :
                                         undefined
@@ -487,7 +679,7 @@
             if (!btn) return;
 
             const id = btn.dataset.id;
-            const bloqueada = Number(btn.dataset.bloqueada) === 1; // true si 1
+            const bloqueada = Number(btn.dataset.bloqueada) === 1;
             const accion = bloqueada ? 'desbloquear' : 'bloquear';
 
             const {
@@ -500,7 +692,9 @@
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'Sí, continuar',
-                cancelButtonText: 'Cancelar'
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#1F2937',
+                cancelButtonColor: '#6B7280'
             });
             if (!isConfirmed) return;
 
@@ -523,7 +717,6 @@
                 const data = await res.json();
                 if (!res.ok || !data.ok) throw new Error(data.message || 'No se pudo actualizar el estado.');
 
-                // Actualiza dataset e icono
                 btn.dataset.bloqueada = data.bloqueada ? 1 : 0;
                 pintarCandado(btn, data.bloqueada);
 

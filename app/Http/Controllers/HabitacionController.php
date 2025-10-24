@@ -237,6 +237,44 @@ class HabitacionController extends Controller
         return response()->json($eventos);
     }
 
+    // MÉTODO UPDATE (línea 414)
+    // Reemplaza el método update que está vacío
+    // ========================================
+
+    public function update(Request $request, string $id)
+    {
+        try {
+            $habitacion = Habitacion::findOrFail($id);
+
+            $validated = $request->validate([
+                'nombre'        => 'required|string|max:100|unique:habitaciones,nombre,' . $id,
+                'descripcion'   => 'nullable|string|max:500',  // ✅ NUEVO
+                'capacidad'     => 'required|integer|min:1|max:20',
+            ], [
+                'nombre.required'         => 'El nombre de la habitación es obligatorio.',
+                'nombre.unique'           => 'Ya existe una habitación con ese nombre.',
+                'descripcion.max'         => 'La descripción no puede superar los 500 caracteres.',  // ✅ NUEVO
+                'capacidad.required'      => 'La capacidad es obligatoria.',
+                'capacidad.integer'       => 'La capacidad debe ser un número entero.',
+                'capacidad.min'           => 'Debe haber al menos 1 huésped.',
+                'capacidad.max'           => 'No se permiten más de 20 huéspedes.',
+            ]);
+
+            $habitacion->update($validated);
+
+            return redirect()->route('habitaciones.index')
+                ->with('success', 'Habitación actualizada correctamente.');
+        } catch (ValidationException $e) {
+            return back()
+                ->withErrors($e->validator)
+                ->withInput()
+                ->with('error', 'Por favor revisa los campos del formulario.');
+        } catch (\Throwable $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Error inesperado: ' . $e->getMessage());
+        }
+    }
 
     // POST: actualizar un único día
     public function updatePrecio(Request $request)
@@ -428,13 +466,7 @@ class HabitacionController extends Controller
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+
 
     /**
      * Remove the specified resource from storage.
@@ -494,5 +526,34 @@ class HabitacionController extends Controller
         );
 
         return back()->with('success', 'Gracias por tu mensaje. Te responderemos pronto.');
+    }
+
+    // ========================================
+    // MÉTODOS PARA HABITACIONCONTROLLER
+    // ========================================
+    // Añadir estos métodos al archivo app/Http/Controllers/HabitacionController.php
+
+    /**
+     * Mostrar la política de privacidad
+     */
+    public function politicaPrivacidad()
+    {
+        return view('legal.politicaPrivacidad');
+    }
+
+    /**
+     * Mostrar la política de cookies
+     */
+    public function politicaCookies()
+    {
+        return view('legal.cookies');
+    }
+
+    /**
+     * Mostrar el aviso legal
+     */
+    public function avisoLegal()
+    {
+        return view('legal.avisoLegal');
     }
 }

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Galeria;
 use App\Models\GaleriaImagen;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class GaleriaController extends Controller
 {
@@ -100,8 +101,28 @@ class GaleriaController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Galeria $galeria)
     {
-        //
+        try {
+            DB::transaction(function () use ($galeria) {
+                // Eliminar todas las imágenes físicas del storage
+                foreach ($galeria->imagenes as $imagen) {
+                    if (Storage::disk('public')->exists($imagen->ruta_imagen)) {
+                        Storage::disk('public')->delete($imagen->ruta_imagen);
+                    }
+                }
+
+                // Eliminar registros de imágenes de la BD
+                $galeria->imagenes()->delete();
+
+                // Eliminar la galería
+                $galeria->delete();
+            });
+
+            return redirect()->route('instalaciones.index')
+                ->with('status', 'Sección eliminada correctamente.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al eliminar la sección: ' . $e->getMessage());
+        }
     }
 }

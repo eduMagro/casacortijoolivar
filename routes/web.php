@@ -78,7 +78,18 @@ Route::post('/reservas/check/{tipo}', [ReservaController::class, 'marcarCheck'])
 // Galerías
 Route::get('/galerias', [GaleriaController::class, 'index'])->name('instalaciones.index');
 Route::post('/galerias', [GaleriaController::class, 'store'])->name('galerias.store');
+Route::delete('/galerias/{galeria}', [GaleriaController::class, 'destroy'])
+    ->name('galerias.destroy')
+    ->middleware('auth');
+// ========================================
+// RUTAS PARA PÁGINAS LEGALES
+// ========================================
+// Añadir estas rutas al archivo routes/web.php
 
+// Páginas legales
+Route::get('/politica-privacidad', [HabitacionController::class, 'politicaPrivacidad'])->name('politica-privacidad');
+Route::get('/politica-cookies', [HabitacionController::class, 'politicaCookies'])->name('politica-cookies');
+Route::get('/aviso-legal', [HabitacionController::class, 'avisoLegal'])->name('aviso-legal');
 // Acciones que requieren sesión
 Route::middleware('auth')->group(function () {
     Route::patch('/galerias/{galeria}', [GaleriaController::class, 'update'])->name('galerias.update');
