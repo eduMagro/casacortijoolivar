@@ -2,11 +2,7 @@
 <x-app-layout>
     <x-slot name="title">Galerías</x-slot>
 
-    <div class="max-w-7xl mx-auto py-10 px-4">
-        <header class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Galerías de Casa Cortijo Olivar</h1>
-        </header>
-
+    <div class="max-w-7xl mx-auto px-4">
         @auth
             <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                 <h2 class="text-xl font-semibold text-gray-800 mb-4">Crear nueva sección</h2>

@@ -476,8 +476,8 @@
                             @endauth
 
                             {{-- Calendario --}}
-                            <div id="calendar-{{ $h->id }}"
-                                class="rounded-lg overflow-hidden border border-gray-100 min-h-[400px]"></div>
+                            {{-- <div id="calendar-{{ $h->id }}"
+                                class="rounded-lg overflow-hidden border border-gray-100 min-h-[400px]"></div> --}}
                         </div>
                     </div>
                 @endforeach

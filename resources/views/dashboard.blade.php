@@ -20,28 +20,116 @@
         <div class="relative z-10 h-full flex items-center justify-center px-4">
             <div
                 class="w-full max-w-5xl contenedor-transparente
-            border border-white/20 rounded-2xl shadow-2xl
-            p-6 md:p-10 flex flex-col gap-6">
+        border border-white/20 rounded-2xl shadow-2xl
+        p-6 md:p-10 flex flex-col gap-6 text-center text-white">
 
-                {{-- Texto arriba --}}
-                <p class="text-white/95 text-lg md:text-2xl text-center leading-relaxed font-semibold">
-                    No importa si viajas solo, en pareja o en grupo, aquí encontrarás la habitación perfecta para ti.
+                {{-- Aviso mantenimiento --}}
+                <p class="text-white/95 text-lg md:text-2xl leading-relaxed font-semibold">
+                    Estamos realizando tareas de mantenimiento en la web.
+                    Para hacer una reserva ponte en contacto con nosotros:
                 </p>
 
-                {{-- Botón centrado --}}
-                <div class="flex justify-center">
-                    <a href="{{ route('habitaciones.index') }}"
-                        class="inline-flex items-center justify-center
-                  px-8 py-3 rounded-lg
-                  bg-white hover:bg-gray-200
-                  text-black font-semibold
-                  shadow-md transition text-base md:text-lg">
-                        Ver disponibilidad
-                    </a>
+                {{-- Datos de contacto accesibles --}}
+                <div class="flex flex-col gap-6 text-base md:text-lg font-medium">
+
+                    {{-- Teléfono --}}
+                    <div class="flex flex-col items-center gap-3">
+                        <div class="text-white/90">
+                            Teléfono:
+                            <span class="font-bold text-white" id="telefono-text">
+                                +34 636 23 08 16
+                            </span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            {{-- Llamar ahora --}}
+                            <a href="tel:+34636230816"
+                                class="inline-flex items-center justify-center px-5 py-3 rounded-lg
+                               bg-white text-black font-semibold shadow-md
+                               hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white/70 focus:ring-offset-2 focus:ring-offset-black"
+                                aria-label="Llamar ahora al +34 636 23 08 16">
+                                📞 Llamar
+                            </a>
+
+                            {{-- Copiar número --}}
+                            <button type="button"
+                                class="inline-flex items-center justify-center px-5 py-3 rounded-lg
+                               bg-white/10 text-white font-semibold border border-white/40 shadow-md
+                               hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/70 focus:ring-offset-2 focus:ring-offset-black"
+                                aria-live="polite" aria-label="Copiar número de teléfono"
+                                onclick="
+                            (function(){
+                                const tel = '+34 636 23 08 16';
+                                navigator.clipboard.writeText(tel).then(function() {
+                                    const ok = document.getElementById('copiado-telefono');
+                                    ok.classList.remove('hidden');
+                                    setTimeout(()=>ok.classList.add('hidden'),1500);
+                                });
+                            })();
+                        ">
+                                📋 Copiar
+                            </button>
+                        </div>
+
+                        <span id="copiado-telefono" class="text-sm text-emerald-300 font-normal hidden" role="status">
+                            Número copiado ✓
+                        </span>
+                    </div>
+
+                    <hr class="w-24 border-white/30 mx-auto">
+
+                    {{-- Email --}}
+                    <div class="flex flex-col items-center gap-3">
+                        <div class="text-white/90 break-all">
+                            Email:
+                            <span class="font-bold text-white" id="email-text">
+                                haciendacotijoolivar@gmail.com
+                            </span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            {{-- Escribir correo --}}
+                            <a href="mailto:haciendacotijoolivar@gmail.com"
+                                class="inline-flex items-center justify-center px-5 py-3 rounded-lg
+                               bg-white text-black font-semibold shadow-md
+                               hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white/70 focus:ring-offset-2 focus:ring-offset-black"
+                                aria-label="Enviar correo a haciendacotijoolivar@gmail.com">
+                                ✉️ Enviar correo
+                            </a>
+
+                            {{-- Copiar correo --}}
+                            <button type="button"
+                                class="inline-flex items-center justify-center px-5 py-3 rounded-lg
+                               bg-white/10 text-white font-semibold border border-white/40 shadow-md
+                               hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/70 focus:ring-offset-2 focus:ring-offset-black"
+                                aria-live="polite" aria-label="Copiar dirección de correo"
+                                onclick="
+                            (function(){
+                                const mail = 'haciendacotijoolivar@gmail.com';
+                                navigator.clipboard.writeText(mail).then(function() {
+                                    const ok = document.getElementById('copiado-email');
+                                    ok.classList.remove('hidden');
+                                    setTimeout(()=>ok.classList.add('hidden'),1500);
+                                });
+                            })();
+                        ">
+                                📋 Copiar
+                            </button>
+                        </div>
+
+                        <span id="copiado-email" class="text-sm text-emerald-300 font-normal hidden" role="status">
+                            Correo copiado ✓
+                        </span>
+                    </div>
+                </div>
+
+                {{-- Mensaje final de reserva web desactivada --}}
+                <div class="text-white/80 text-sm md:text-base font-normal pt-4">
+                    Temporalmente las reservas online están desactivadas.
                 </div>
             </div>
-
         </div>
+
     </div>
 
     {{-- Sección de bienvenida --}}
